@@ -1,4 +1,5 @@
 import { useCaesarCipher } from "../hooks/useCaesarCipher";
+import { AlphabetMap } from "./AlphabetMap";
 import { CipherAlgorithmSelector } from "./CipherAlgorithmSelector";
 import { CipherConfig } from "./CipherConfig";
 import { CipherModeSelector } from "./CipherModeSelector";
@@ -71,6 +72,12 @@ export function CaesarWorkspace() {
               onDownload={downloadResult}
             />
           </div>
+
+          <AlphabetMap
+            mode={cipher.mode}
+            normalizedKey={cipher.normalizedKey ?? 0}
+            input={cipher.inputType === "text" ? cipher.text : cipher.fileText}
+          />
 
           <CipherConfig
             value={cipher.key}

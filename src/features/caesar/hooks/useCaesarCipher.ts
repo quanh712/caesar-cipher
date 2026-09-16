@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { caesarApi } from "../services/caesarApi";
 import type { CipherAlgorithm, CipherMode, InputType, NoticeState } from "../types/cipher";
 import { normalizeKey } from "../utils/caesar";
-import { parseKey, validateInput } from "../utils/validation";
+import { MAX_FILE_BYTES, parseKey, validateInput } from "../utils/validation";
 
 export function useCaesarCipher() {
   const [algorithm, setAlgorithm] = useState<CipherAlgorithm>("caesar");
@@ -10,6 +10,7 @@ export function useCaesarCipher() {
   const [inputType, setInputType] = useState<InputType>("text");
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [fileText, setFileText] = useState("");
   const [key, setKey] = useState("3");
   const [result, setResult] = useState("");
   const [notice, setNotice] = useState<NoticeState | null>(null);
@@ -54,6 +55,22 @@ export function useCaesarCipher() {
   function resetInput() {
     setText("");
     setFile(null);
+    setFileText("");
+    setNotice(null);
+  }
+
+  async function updateFile(nextFile: File | null) {
+    setFile(nextFile);
+    const canReadFile = nextFile
+      && /\.txt$/i.test(nextFile.name)
+      && nextFile.size > 0
+      && nextFile.size <= MAX_FILE_BYTES;
+
+    try {
+      setFileText(canReadFile ? await nextFile.text() : "");
+    } catch {
+      setFileText("");
+    }
     setNotice(null);
   }
 
@@ -68,7 +85,8 @@ export function useCaesarCipher() {
     text,
     setText,
     file,
-    setFile,
+    fileText,
+    setFile: updateFile,
     key,
     setKey,
     normalizedKey: parsedKey === null ? null : normalizeKey(parsedKey),

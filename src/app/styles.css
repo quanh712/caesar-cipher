@@ -30,6 +30,9 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .logo { color: inherit; font-size: 22px; font-weight: 800; text-decoration: none; }
 .logo span { color: var(--accent); }
 .nav__label { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; }
+.nav__actions { display: flex; align-items: center; gap: 14px; }
+.refresh-button { padding: 7px 11px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #d4d4d8; border-radius: 7px; background: white; color: #3f3f46; font-size: 13px; font-weight: 650; }
+.refresh-button:hover { background: var(--surface); }
 
 .page { width: min(1180px, calc(100% - 40px)); margin: auto; padding: 40px 0 64px; }
 .hero { padding-bottom: 24px; border-bottom: 1px solid var(--border); }
@@ -118,6 +121,18 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .status--success { background: #ebfbee; color: var(--success); }
 .status--error { background: #fff5f5; color: var(--danger); }
 
+.map-section { margin-top: 28px; }
+.map-legend { font-weight: 500; letter-spacing: 0; text-transform: none; }
+.alphabet-panel { overflow: hidden; }
+.alphabet-map { padding: 14px 16px; overflow-x: auto; }
+.alphabet-row { min-width: 680px; display: grid; grid-template-columns: 62px repeat(26, minmax(20px, 1fr)); gap: 3px; font: 12px/1.4 "SFMono-Regular", Consolas, monospace; }
+.alphabet-row + .alphabet-row { margin-top: 4px; }
+.alphabet-label { align-self: center; color: var(--muted); font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.alphabet-cell { padding: 4px 0; border-radius: 3px; background: var(--surface); text-align: center; }
+.alphabet-row--mapped .alphabet-cell { background: #18181b; color: white; }
+.alphabet-cell--used { background: #ffe2ec; color: var(--accent); font-weight: 750; }
+.alphabet-row--mapped .alphabet-cell--used { background: var(--accent); color: white; }
+
 .config { margin-top: 28px; padding: 18px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border: 1px solid var(--border); border-radius: 10px; }
 .config h2 { margin: 0 0 4px; font-size: 20px; }
 .config p { margin: 0; color: var(--muted); font-size: 14px; }
@@ -156,6 +171,7 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 
 @media (max-width: 520px) {
   .page, .nav__inner { width: min(100% - 24px, 1180px); }
+  .nav__label { display: none; }
   .mode-selector { grid-template-columns: 1fr; }
   .key-control { width: 100%; align-items: flex-start; flex-direction: column; }
   .notice { right: 16px; bottom: 16px; }
