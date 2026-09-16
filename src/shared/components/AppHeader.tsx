@@ -6,7 +6,6 @@ export function AppHeader() {
           CIPHER WORKBENCH
         </a>
         <div className="nav__actions">
-          <span className="nav__label">Cipher tools</span>
           <button className="refresh-button" type="button" onClick={() => window.location.reload()}>
             <span aria-hidden="true">↻</span>
             Làm mới
