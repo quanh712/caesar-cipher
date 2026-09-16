@@ -9,8 +9,8 @@ export function App() {
         <header className="hero">
           <h1>Cipher Debugger</h1>
           <p>
-            Mã hóa và giải mã văn bản hoặc file với các thuật toán mật mã
-            trong cùng một workspace trực quan.
+            Mã hóa và giải mã văn bản hoặc file với các thuật toán mật mã trong cùng một workspace
+            trực quan.
           </p>
         </header>
         <CaesarWorkspace />

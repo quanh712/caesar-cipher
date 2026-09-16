@@ -95,17 +95,19 @@ Acceptance criteria cho File mode:
 - Mode có đúng hai giá trị: `encrypt` và `decrypt`.
 - Input type có đúng hai giá trị: `text` và `file`.
 - Key bắt buộc là số nguyên, cho phép số âm và số lớn hơn `25`.
+- Key phải nằm trong phạm vi số nguyên an toàn của JavaScript để tránh mất độ chính xác khi gửi API.
 - Key được chuẩn hóa theo công thức `((key % 26) + 26) % 26`.
 - UI hiển thị khóa đã chuẩn hóa khi khác khóa người dùng nhập.
+- Phần khóa chỉ có ô nhập và trạng thái validation; không hiển thị nút Copy hoặc Clear.
 
 Ví dụ:
 
 | Key nhập | Key chuẩn hóa |
-| ---: | ---: |
-| `3` | `3` |
-| `29` | `3` |
-| `-3` | `23` |
-| `26` | `0` |
+| -------: | ------------: |
+|      `3` |           `3` |
+|     `29` |           `3` |
+|     `-3` |          `23` |
+|     `26` |           `0` |
 
 ### FE-04 Output Panel
 
@@ -128,10 +130,12 @@ Ví dụ:
 
 - Action button bị disable khi input không hợp lệ, key không hợp lệ hoặc request đang chạy.
 - Trong lúc request, input và key không được thay đổi.
+- Trong lúc request, algorithm, mode, input type, input clear và example generator cũng bị khóa.
 - Chỉ có tối đa một request xử lý được gửi tại một thời điểm.
 - Thành công cập nhật output và success notification.
 - Lỗi nghiệp vụ, HTTP và network không làm mất input hiện tại.
 - Request mới phải xóa notification cũ nhưng giữ output cũ cho đến khi nhận kết quả thành công mới.
+- Output, thống kê và tên file download phải dùng snapshot của request đã hoàn thành, không dùng input đang chỉnh sửa.
 
 ### FE-07 Notification
 
@@ -192,11 +196,11 @@ Request và response dùng cùng schema với Encrypt text.
 
 Content type: `multipart/form-data`.
 
-| Field | Type | Required | Quy tắc |
-| --- | --- | --- | --- |
-| `file` | File | Có | `.txt`, khác rỗng, tối đa `1 MiB` |
-| `key` | Integer string | Có | Cho phép âm và lớn hơn `25` |
-| `action` | String | Có | `encrypt` hoặc `decrypt` |
+| Field    | Type           | Required | Quy tắc                           |
+| -------- | -------------- | -------- | --------------------------------- |
+| `file`   | File           | Có       | `.txt`, khác rỗng, tối đa `1 MiB` |
+| `key`    | Integer string | Có       | Cho phép âm và lớn hơn `25`       |
+| `action` | String         | Có       | `encrypt` hoặc `decrypt`          |
 
 Success response dùng cùng JSON schema với Text API. `result` chứa toàn bộ nội dung file đã xử lý.
 
@@ -204,13 +208,13 @@ Success response dùng cùng JSON schema với Text API. `result` chứa toàn b
 
 HTTP status đề xuất:
 
-| Status | Trường hợp |
-| ---: | --- |
-| `400` | Request thiếu field hoặc sai kiểu dữ liệu |
-| `413` | File vượt giới hạn |
-| `415` | File không được hỗ trợ |
-| `422` | Dữ liệu đúng schema nhưng không thể xử lý |
-| `500` | Lỗi không mong đợi từ server |
+| Status | Trường hợp                                |
+| -----: | ----------------------------------------- |
+|  `400` | Request thiếu field hoặc sai kiểu dữ liệu |
+|  `413` | File vượt giới hạn                        |
+|  `415` | File không được hỗ trợ                    |
+|  `422` | Dữ liệu đúng schema nhưng không thể xử lý |
+|  `500` | Lỗi không mong đợi từ server              |
 
 Body:
 
@@ -259,13 +263,13 @@ Nguyên tắc:
 
 - Runtime UI: React và TypeScript.
 - Build tool: Vite.
-- Styling mục tiêu: CSS Modules hoặc feature-scoped CSS; giao diện bám prototype.
-- Unit/component test mục tiêu: Vitest và React Testing Library.
-- API mocking mục tiêu: Mock Service Worker.
-- End-to-end test mục tiêu: Playwright.
-- Code quality mục tiêu: ESLint và Prettier.
+- Styling: feature-scoped CSS; giao diện bám prototype.
+- Unit/component test: Vitest và React Testing Library.
+- API mocking: Mock Service Worker.
+- End-to-end test: Playwright trên Desktop Chrome và mobile viewport.
+- Code quality: ESLint và Prettier.
 
-Các công cụ kiểm thử và lint sẽ được cấu hình trong phase tiếp theo; production build hiện phải vượt qua TypeScript typecheck.
+Các quality gate khả dụng: `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm run test`, `npm run test:e2e`, `npm run build` và `npm run check:all`.
 
 ## 10. Docker và triển khai
 

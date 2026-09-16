@@ -15,7 +15,9 @@ export function Notification({ notice, onClose }: NotificationProps) {
   return (
     <div className={`notice notice--${notice.kind}`} role="status" aria-live="polite">
       <span>{notice.message}</span>
-      <button type="button" onClick={onClose} aria-label="Đóng thông báo">×</button>
+      <button type="button" onClick={onClose} aria-label="Đóng thông báo">
+        ×
+      </button>
     </div>
   );
 }

@@ -4,10 +4,17 @@ export const MAX_FILE_BYTES = 1024 * 1024;
 
 export function parseKey(value: string): number | null {
   const trimmedValue = value.trim();
-  return /^-?\d+$/.test(trimmedValue) ? Number(trimmedValue) : null;
+  if (!/^-?\d+$/.test(trimmedValue)) return null;
+
+  const parsedValue = Number(trimmedValue);
+  return Number.isSafeInteger(parsedValue) ? parsedValue : null;
 }
 
-export function validateInput(inputType: InputType, text: string, file: File | null): string | null {
+export function validateInput(
+  inputType: InputType,
+  text: string,
+  file: File | null,
+): string | null {
   if (inputType === "text") {
     return text.trim() ? null : "Văn bản không được để trống.";
   }

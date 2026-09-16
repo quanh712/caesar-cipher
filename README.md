@@ -42,3 +42,12 @@ docker compose up --build
 ```
 
 Ứng dụng chạy tại `http://localhost:8081`, health check tại `http://localhost:8081/health`.
+
+## Kiểm tra chất lượng
+
+```bash
+npm run check
+npm run test:e2e
+```
+
+`check` chạy format check, ESLint, TypeScript, unit/component tests và production build. `test:e2e` chạy Playwright trên desktop và mobile viewport.

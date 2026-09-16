@@ -36,7 +36,12 @@ export function AlphabetMap({ mode, normalizedKey, input }: AlphabetMapProps) {
           <div className="alphabet-row">
             <span className="alphabet-label">{isEncrypting ? "Bản rõ" : "Bản mã"}</span>
             {Array.from(alphabet).map((letter) => (
-              <span className={usedLetters.has(letter) ? "alphabet-cell alphabet-cell--used" : "alphabet-cell"} key={letter}>
+              <span
+                className={
+                  usedLetters.has(letter) ? "alphabet-cell alphabet-cell--used" : "alphabet-cell"
+                }
+                key={letter}
+              >
                 {letter}
               </span>
             ))}
@@ -45,7 +50,11 @@ export function AlphabetMap({ mode, normalizedKey, input }: AlphabetMapProps) {
             <span className="alphabet-label">{isEncrypting ? "Bản mã" : "Bản rõ"}</span>
             {mappedAlphabet.map((letter, index) => (
               <span
-                className={usedLetters.has(alphabet[index]) ? "alphabet-cell alphabet-cell--used" : "alphabet-cell"}
+                className={
+                  usedLetters.has(alphabet[index])
+                    ? "alphabet-cell alphabet-cell--used"
+                    : "alphabet-cell"
+                }
                 key={`${letter}-${index}`}
               >
                 {letter}

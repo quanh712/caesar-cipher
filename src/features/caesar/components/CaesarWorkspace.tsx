@@ -12,7 +12,7 @@ export function CaesarWorkspace() {
 
   async function copyResult() {
     try {
-      await navigator.clipboard.writeText(cipher.result);
+      await navigator.clipboard.writeText(cipher.result?.text ?? "");
       cipher.setNotice({ kind: "success", message: "Copy kết quả thành công." });
     } catch {
       cipher.setNotice({ kind: "error", message: "Trình duyệt không cho phép copy." });
@@ -21,7 +21,7 @@ export function CaesarWorkspace() {
 
   async function copyInput() {
     try {
-      const input = cipher.inputType === "text" ? cipher.text : await cipher.file?.text();
+      const input = cipher.inputType === "text" ? cipher.text : cipher.fileText;
       await navigator.clipboard.writeText(input ?? "");
       cipher.setNotice({ kind: "success", message: "Copy đầu vào thành công." });
     } catch {
@@ -30,24 +30,51 @@ export function CaesarWorkspace() {
   }
 
   function downloadResult() {
-    const url = URL.createObjectURL(new Blob([cipher.result], { type: "text/plain;charset=utf-8" }));
+    if (!cipher.result) return;
+
+    const url = URL.createObjectURL(
+      new Blob([cipher.result.text], { type: "text/plain;charset=utf-8" }),
+    );
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${cipher.file?.name.replace(/\.txt$/i, "") ?? "result"}_${cipher.mode}.txt`;
+    link.download = `${cipher.result.fileName?.replace(/\.txt$/i, "") ?? "result"}_${cipher.result.mode}.txt`;
     link.click();
-    URL.revokeObjectURL(url);
+    window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
   }
 
   return (
     <div className="workspace">
       <CipherAlgorithmSelector
         value={cipher.algorithm}
+        disabled={cipher.isLoading}
         onChange={(algorithm) => {
           cipher.setAlgorithm(algorithm);
           cipher.setNotice(null);
         }}
       />
-      <CipherModeSelector value={cipher.mode} onChange={cipher.setMode} />
+      <CipherModeSelector
+        value={cipher.mode}
+        disabled={cipher.isLoading}
+        onChange={cipher.setMode}
+      />
+
+      {cipher.isAlgorithmAvailable && (
+        <div className="helper-row">
+          <span>
+            {cipher.mode === "encrypt"
+              ? "Dán bản rõ bên dưới để mã hóa bằng hệ mật Caesar."
+              : "Dán bản mã bên dưới để giải mã bằng hệ mật Caesar."}
+          </span>
+          <button
+            className="button button--secondary"
+            type="button"
+            onClick={cipher.loadExample}
+            disabled={cipher.isLoading}
+          >
+            Generate example
+          </button>
+        </div>
+      )}
 
       {cipher.isAlgorithmAvailable ? (
         <>
@@ -56,6 +83,7 @@ export function CaesarWorkspace() {
               inputType={cipher.inputType}
               text={cipher.text}
               file={cipher.file}
+              fileText={cipher.fileText}
               error={cipher.inputError}
               disabled={cipher.isLoading}
               onInputTypeChange={cipher.setInputType}
@@ -66,9 +94,9 @@ export function CaesarWorkspace() {
             />
             <OutputPanel
               result={cipher.result}
-              showDownload={cipher.inputType === "file"}
+              processingStatus={cipher.processingStatus}
               onCopy={copyResult}
-              onClear={() => cipher.setResult("")}
+              onClear={cipher.clearResult}
               onDownload={downloadResult}
             />
           </div>
@@ -99,7 +127,10 @@ export function CaesarWorkspace() {
       ) : (
         <div className="availability-panel">
           <strong>Thuật toán đang được chuẩn bị</strong>
-          <span>Hiện tại workspace chỉ xử lý Caesar Cipher. Hill và Huffman sẽ được bổ sung ở phase tiếp theo.</span>
+          <span>
+            Hiện tại workspace chỉ xử lý Caesar Cipher. Hill và Huffman sẽ được bổ sung ở phase tiếp
+            theo.
+          </span>
         </div>
       )}
 
