@@ -2,8 +2,8 @@ export function AppHeader() {
   return (
     <nav className="nav" aria-label="Điều hướng chính">
       <div className="nav__inner">
-        <a className="logo" href="/" aria-label="Cipher IO">
-          CIPHER<span>.</span>IO
+        <a className="logo" href="/" aria-label="Caesar Cipher">
+          CAESAR CIPHER
         </a>
         <div className="nav__actions">
           <span className="nav__label">Cipher tools</span>

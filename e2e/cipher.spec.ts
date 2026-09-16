@@ -8,7 +8,8 @@ test("encrypts the generated example", async ({ page }) => {
   page.on("pageerror", (error) => browserErrors.push(error.message));
 
   await page.goto("/");
-  await expect(page.getByText("CIPHER.IO")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Caesar Cipher" })).toBeVisible();
+  await expect(page).toHaveTitle("Caesar Cipher | Encode and Decode");
   await expect(page.getByText("Bảng dịch chuyển")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(
     false,

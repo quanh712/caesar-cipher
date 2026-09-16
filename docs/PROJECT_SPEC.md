@@ -67,7 +67,7 @@ Acceptance criteria:
 - Tablet/mobile từ `900px` trở xuống: input và output chuyển thành một cột.
 - Không xuất hiện horizontal scroll ở viewport từ `320px` trở lên, ngoại trừ thành phần có chủ đích như alphabet map.
 - Các trạng thái focus phải nhìn thấy được khi điều hướng bằng bàn phím.
-- Branding hiển thị `CIPHER.IO` và không hiển thị nhãn nội bộ `Week 1 MVP`.
+- Branding hiển thị `CAESAR CIPHER` và không hiển thị nhãn nội bộ `Week 1 MVP`.
 - Bộ chọn thuật toán nằm trên bộ chọn Encode/Decode.
 - Header có nút làm mới để tải lại workspace về trạng thái ban đầu.
 - Với Caesar, bảng dịch chuyển A–Z nằm ngay trên phần nhập khóa, cập nhật theo mode và khóa chuẩn hóa.
@@ -297,6 +297,17 @@ Chạy với Backend thật:
 ```bash
 VITE_USE_MOCK_API=false VITE_API_BASE_URL=http://localhost:8080 docker compose up --build
 ```
+
+Production dự kiến dùng cùng origin:
+
+```text
+Website: https://cipherworkbench.com
+API:     https://cipherworkbench.com/api/...
+```
+
+`cipherworkbench.com` đang ở trạng thái dự kiến, chờ đăng ký và cấu hình DNS. Khi build production
+sau khi domain được xác nhận, đặt `VITE_USE_MOCK_API=false` và `VITE_API_BASE_URL` thành chuỗi rỗng
+để FE gọi API qua đường dẫn tương đối `/api/...`.
 
 Lưu ý: biến `VITE_*` được nhúng ở build time. Thay đổi biến yêu cầu build lại image.
 

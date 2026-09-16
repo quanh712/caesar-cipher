@@ -1,8 +1,10 @@
-# Caesar Cipher Frontend
+# Caesar Cipher
 
 Frontend MVP cho công cụ mã hóa và giải mã Caesar Cipher theo scope Week 1.
 
 Đặc tả chức năng, acceptance criteria, API contract và Definition of Done nằm tại [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md).
+
+Tài liệu bàn giao contract cho Backend nằm tại [`repo_docs/BACKEND_HANDOFF.md`](repo_docs/BACKEND_HANDOFF.md).
 
 ## Khởi chạy
 
@@ -12,6 +14,9 @@ npm run dev
 ```
 
 Sao chép `.env.example` thành `.env` khi cần thay đổi API URL hoặc chuyển giữa mock API và backend thật.
+
+Brand hiển thị là `Caesar Cipher`. Production domain dự kiến là `https://cipherworkbench.com`, hiện
+đang chờ đăng ký và cấu hình DNS.
 
 ## Cấu trúc
 
@@ -42,6 +47,23 @@ docker compose up --build
 ```
 
 Ứng dụng chạy tại `http://localhost:8081`, health check tại `http://localhost:8081/health`.
+
+Production dự kiến phục vụ FE và BE cùng origin:
+
+```text
+https://cipherworkbench.com
+https://cipherworkbench.com/api/...
+```
+
+Sử dụng `.env.production.example` làm mẫu build production:
+
+```bash
+cp .env.production.example .env.production
+docker compose --env-file .env.production up --build -d
+```
+
+Nginx hiện chưa proxy `/api` vì Backend chưa cung cấp upstream URL hoặc Docker service name. Lệnh
+trên chỉ là cấu hình build FE; chỉ bật API thật sau khi reverse proxy đã được cấu hình.
 
 ## Kiểm tra chất lượng
 
