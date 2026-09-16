@@ -67,7 +67,7 @@ Acceptance criteria:
 - Tablet/mobile từ `900px` trở xuống: input và output chuyển thành một cột.
 - Không xuất hiện horizontal scroll ở viewport từ `320px` trở lên, ngoại trừ thành phần có chủ đích như alphabet map.
 - Các trạng thái focus phải nhìn thấy được khi điều hướng bằng bàn phím.
-- Branding hiển thị `CAESAR CIPHER` và không hiển thị nhãn nội bộ `Week 1 MVP`.
+- Branding hiển thị `CIPHER WORKBENCH` và không hiển thị nhãn nội bộ `Week 1 MVP`.
 - Bộ chọn thuật toán nằm trên bộ chọn Encode/Decode.
 - Header có nút làm mới để tải lại workspace về trạng thái ban đầu.
 - Với Caesar, bảng dịch chuyển A–Z nằm ngay trên phần nhập khóa, cập nhật theo mode và khóa chuẩn hóa.

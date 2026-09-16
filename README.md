@@ -1,4 +1,4 @@
-# Caesar Cipher
+# Cipher Workbench
 
 Frontend MVP cho công cụ mã hóa và giải mã Caesar Cipher theo scope Week 1.
 
@@ -15,7 +15,7 @@ npm run dev
 
 Sao chép `.env.example` thành `.env` khi cần thay đổi API URL hoặc chuyển giữa mock API và backend thật.
 
-Brand hiển thị là `Caesar Cipher`. Production domain dự kiến là `https://cipherworkbench.com`, hiện
+Brand hiển thị là `Cipher Workbench`. Production domain dự kiến là `https://cipherworkbench.com`, hiện
 đang chờ đăng ký và cấu hình DNS.
 
 ## Cấu trúc

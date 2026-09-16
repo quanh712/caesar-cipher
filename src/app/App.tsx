@@ -7,7 +7,7 @@ export function App() {
       <AppHeader />
       <main className="page">
         <header className="hero">
-          <h1>Caesar Cipher Debugger</h1>
+          <h1>Cipher Workbench</h1>
           <p>
             Mã hóa và giải mã văn bản hoặc file với các thuật toán mật mã trong cùng một workspace
             trực quan.

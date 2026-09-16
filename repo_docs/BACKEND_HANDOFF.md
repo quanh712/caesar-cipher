@@ -1,8 +1,8 @@
-# Caesar Cipher Backend Handoff
+# Cipher Workbench Backend Handoff
 
 ## 1. Mục đích tài liệu
 
-Tài liệu này là API contract chính thức để Backend triển khai tính năng Caesar Cipher và để Frontend chuyển từ mock API sang API thật. Các yêu cầu được đánh dấu bắt buộc phải được đáp ứng trước khi tích hợp; thông tin hạ tầng chưa có được ghi rõ là đang chờ xác nhận.
+Tài liệu này là API contract chính thức để Backend triển khai tính năng Caesar Cipher cho sản phẩm Cipher Workbench và để Frontend chuyển từ mock API sang API thật. Các yêu cầu được đánh dấu bắt buộc phải được đáp ứng trước khi tích hợp; thông tin hạ tầng chưa có được ghi rõ là đang chờ xác nhận.
 
 Phạm vi hiện tại chỉ gồm Caesar Cipher. Hill và Huffman mới là lựa chọn hiển thị trên giao diện, chưa cần Backend xử lý trong phase này.
 
