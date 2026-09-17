@@ -30,6 +30,19 @@ npm run dev:mock
 Mock là opt-in và UI luôn hiển thị `Bản demo giả lập`. Không dùng chế độ này để nghiệm thu tích hợp
 hoặc production.
 
+## Docker production
+
+Production chạy FE/Nginx và FastAPI trong hai container, cùng origin qua Nginx:
+
+```bash
+cp .env.deploy.example .env.deploy
+docker compose --env-file .env.deploy up -d --build
+```
+
+Mặc định ứng dụng chỉ bind tại `http://127.0.0.1:8080`; Backend không công khai
+cổng `8000`. Hướng dẫn VPS, HTTPS, rate limit, kiểm tra và rollback nằm tại
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
 ## Docker mock preview
 
 Docker trong repo FE chỉ là bản preview độc lập, không phải runtime production:
@@ -38,8 +51,8 @@ Docker trong repo FE chỉ là bản preview độc lập, không phải runtime
 docker compose -f docker-compose.preview.yml up --build
 ```
 
-Mở `http://localhost:8081`. Production Week 1 phải do FastAPI phục vụ UI và API cùng origin trên
-cổng `8000`; việc đưa React build vào repo Backend cần một OpenSpec change riêng phía Backend.
+Mở `http://localhost:8081`. Preview luôn dùng mock và không được dùng để nghiệm
+thu tích hợp hoặc triển khai production.
 
 ## Kiểm tra
 
@@ -52,6 +65,12 @@ Khi Backend thật đang chạy ở cổng `8000`:
 
 ```bash
 npm run test:e2e:integration
+```
+
+Khi production Compose stack đang chạy tại `127.0.0.1:8080`:
+
+```bash
+npm run test:e2e:production
 ```
 
 `test:e2e` dùng mock đúng contract; `test:e2e:integration` không bật mock và gọi Backend qua Vite

@@ -1,6 +1,14 @@
 node_modules
 dist
 .git
+.agents
+.codex
+.env.*
+playwright-report
+test-results
+coverage
+paseo.json
+skills-lock.json
 .env
 .env.local
 *.log
