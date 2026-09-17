@@ -1,75 +1,58 @@
-# Cipher Workbench
+# Cipher Workbench Frontend
 
-Frontend MVP cho công cụ mã hóa và giải mã Caesar Cipher theo scope Week 1.
+React/Vite frontend cho Caesar Cipher Week 1. UI tích hợp theo Backend contract được ghim tại
+[`docs/BACKEND_CONTRACT.md`](docs/BACKEND_CONTRACT.md); yêu cầu riêng của giao diện nằm tại
+[`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md).
 
-Đặc tả chức năng, acceptance criteria, API contract và Definition of Done nằm tại [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md).
+## Chạy với Backend thật
 
-Tài liệu bàn giao contract cho Backend nằm tại [`repo_docs/BACKEND_HANDOFF.md`](repo_docs/BACKEND_HANDOFF.md).
-
-## Khởi chạy
+Khởi động Backend tại `http://localhost:8000`, sau đó:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Sao chép `.env.example` thành `.env` khi cần thay đổi API URL hoặc chuyển giữa mock API và backend thật.
+Mở `http://localhost:5173`. Vite chuyển tiếp `/api` sang Backend ở cổng `8000`; không cần CORS và
+runtime code không ghi cứng Backend URL.
 
-Brand hiển thị là `Cipher Workbench`. Production domain dự kiến là `https://cipherworkbench.com`, hiện
-đang chờ đăng ký và cấu hình DNS.
+Swagger và schema Backend:
 
-## Cấu trúc
+- <http://localhost:8000/docs>
+- <http://localhost:8000/openapi.json>
 
-```text
-src/
-├── app/                         # App shell và style toàn cục
-├── features/caesar/             # Toàn bộ nghiệp vụ Caesar Cipher
-│   ├── components/              # Các khối giao diện theo scope
-│   ├── hooks/                   # State và luồng xử lý màn hình
-│   ├── services/                # Kết nối API/mock API
-│   ├── types/                   # TypeScript contracts
-│   └── utils/                   # Validation và thuật toán hỗ trợ
-└── shared/components/           # Component dùng chung giữa nhiều feature
-```
-
-## API contract
-
-- `POST /api/caesar/encrypt` với `{ text, key }`
-- `POST /api/caesar/decrypt` với `{ text, key }`
-- `POST /api/caesar/file` với multipart fields `file`, `key`, `action`
-
-Response mong đợi: `{ success: boolean, result?: string, message?: string }`.
-
-## Docker
+## Chạy độc lập bằng mock
 
 ```bash
-docker compose up --build
+npm run dev:mock
 ```
 
-Ứng dụng chạy tại `http://localhost:8081`, health check tại `http://localhost:8081/health`.
+Mock là opt-in và UI luôn hiển thị `Bản demo giả lập`. Không dùng chế độ này để nghiệm thu tích hợp
+hoặc production.
 
-Production dự kiến phục vụ FE và BE cùng origin:
+## Docker mock preview
 
-```text
-https://cipherworkbench.com
-https://cipherworkbench.com/api/...
-```
-
-Sử dụng `.env.production.example` làm mẫu build production:
+Docker trong repo FE chỉ là bản preview độc lập, không phải runtime production:
 
 ```bash
-cp .env.production.example .env.production
-docker compose --env-file .env.production up --build -d
+docker compose -f docker-compose.preview.yml up --build
 ```
 
-Nginx hiện chưa proxy `/api` vì Backend chưa cung cấp upstream URL hoặc Docker service name. Lệnh
-trên chỉ là cấu hình build FE; chỉ bật API thật sau khi reverse proxy đã được cấu hình.
+Mở `http://localhost:8081`. Production Week 1 phải do FastAPI phục vụ UI và API cùng origin trên
+cổng `8000`; việc đưa React build vào repo Backend cần một OpenSpec change riêng phía Backend.
 
-## Kiểm tra chất lượng
+## Kiểm tra
 
 ```bash
 npm run check
 npm run test:e2e
 ```
 
-`check` chạy format check, ESLint, TypeScript, unit/component tests và production build. `test:e2e` chạy Playwright trên desktop và mobile viewport.
+Khi Backend thật đang chạy ở cổng `8000`:
+
+```bash
+npm run test:e2e:integration
+```
+
+`test:e2e` dùng mock đúng contract; `test:e2e:integration` không bật mock và gọi Backend qua Vite
+proxy.

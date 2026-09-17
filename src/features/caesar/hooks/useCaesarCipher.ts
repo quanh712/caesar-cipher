@@ -1,7 +1,6 @@
 import { useMemo, useRef, useState } from "react";
-import { caesarApi } from "../services/caesarApi";
+import { CaesarApiError, caesarApi } from "../services/caesarApi";
 import type {
-  CipherAlgorithm,
   CipherMode,
   CipherResultSnapshot,
   InputType,
@@ -11,36 +10,83 @@ import type {
 import { normalizeKey } from "../utils/caesar";
 import { MAX_FILE_BYTES, parseKey, validateInput } from "../utils/validation";
 
+function userFacingError(error: unknown) {
+  return error instanceof CaesarApiError
+    ? error.message
+    : "Không thể kết nối tới máy chủ. Vui lòng thử lại.";
+}
+
+function saveBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+}
+
 export function useCaesarCipher() {
-  const [algorithm, setAlgorithm] = useState<CipherAlgorithm>("caesar");
-  const [mode, setMode] = useState<CipherMode>("encrypt");
-  const [inputType, setInputType] = useState<InputType>("text");
-  const [text, setText] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [mode, setModeState] = useState<CipherMode>("encrypt");
+  const [inputType, setInputTypeState] = useState<InputType>("text");
+  const [text, setTextState] = useState("");
+  const [file, setFileState] = useState<File | null>(null);
   const [fileText, setFileText] = useState("");
-  const [key, setKey] = useState("3");
+  const [key, setKeyState] = useState("");
   const [result, setResult] = useState<CipherResultSnapshot | null>(null);
   const [notice, setNotice] = useState<NoticeState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>("idle");
   const fileReadVersion = useRef(0);
+  const requestInFlight = useRef(false);
 
-  const parsedKey = useMemo(() => parseKey(key), [key]);
+  const parsedKey = useMemo(() => parseKey(key, inputType), [inputType, key]);
   const inputError = useMemo(() => validateInput(inputType, text, file), [file, inputType, text]);
-  const keyError = key.trim() && parsedKey === null ? "Khóa phải là số nguyên." : null;
-  const isAlgorithmAvailable = algorithm === "caesar";
-  const canSubmit = isAlgorithmAvailable && !isLoading && !inputError && parsedKey !== null;
+  const keyError = key.trim() !== "" && parsedKey === null ? "Khóa phải là số nguyên." : null;
+  const canSubmit = !isLoading && !inputError && parsedKey !== null;
+
+  function clearDerivedState() {
+    setResult(null);
+    setProcessingStatus("idle");
+    setNotice(null);
+  }
+
+  function setMode(nextMode: CipherMode) {
+    if (isLoading || nextMode === mode) return;
+    setModeState(nextMode);
+    clearDerivedState();
+  }
+
+  function setInputType(nextType: InputType) {
+    if (isLoading || nextType === inputType) return;
+    setInputTypeState(nextType);
+    clearDerivedState();
+  }
+
+  function setText(nextText: string) {
+    if (isLoading) return;
+    setTextState(nextText);
+    clearDerivedState();
+  }
+
+  function setKey(nextKey: string) {
+    if (isLoading) return;
+    setKeyState(nextKey);
+    clearDerivedState();
+  }
 
   async function processCipher() {
-    if (!canSubmit || parsedKey === null) return;
+    if (!canSubmit || parsedKey === null || requestInFlight.current) return;
 
     const requestMode = mode;
     const requestInputType = inputType;
     const requestFile = file;
     const requestSource = requestInputType === "text" ? text : fileText;
     const requestKeyValue = key;
+    const requestKeyToken = parsedKey.toString();
     const requestNormalizedKey = normalizeKey(parsedKey);
 
+    requestInFlight.current = true;
+    setResult(null);
     setIsLoading(true);
     setProcessingStatus("loading");
     setNotice(null);
@@ -48,16 +94,15 @@ export function useCaesarCipher() {
     try {
       const response =
         requestInputType === "text"
-          ? await caesarApi.processText(requestMode, { text: requestSource, key: parsedKey })
-          : await caesarApi.processFile({
+          ? await caesarApi.processText(requestMode, {
+              text: requestSource,
+              keyToken: requestKeyToken,
+            })
+          : await caesarApi.previewFile({
               file: requestFile!,
-              key: parsedKey,
+              rawKey: requestKeyValue,
               action: requestMode,
             });
-
-      if (!response.success || response.result === undefined) {
-        throw new Error(response.message || "Không thể xử lý dữ liệu.");
-      }
 
       setResult({
         text: response.result,
@@ -65,6 +110,7 @@ export function useCaesarCipher() {
         mode: requestMode,
         inputType: requestInputType,
         fileName: requestFile?.name,
+        file: requestFile ?? undefined,
         keyValue: requestKeyValue,
         normalizedKey: requestNormalizedKey,
       });
@@ -74,37 +120,72 @@ export function useCaesarCipher() {
         message: requestMode === "encrypt" ? "Mã hóa thành công." : "Giải mã thành công.",
       });
     } catch (error) {
+      setResult(null);
       setProcessingStatus("error");
-      setNotice({
-        kind: "error",
-        message: error instanceof Error ? error.message : "Không kết nối được máy chủ.",
-      });
+      setNotice({ kind: "error", message: userFacingError(error) });
     } finally {
+      requestInFlight.current = false;
+      setIsLoading(false);
+    }
+  }
+
+  async function downloadResult() {
+    const snapshot = result;
+    if (!snapshot || isLoading || requestInFlight.current) return;
+
+    requestInFlight.current = true;
+    setIsLoading(true);
+    setNotice(null);
+    try {
+      if (snapshot.inputType === "text") {
+        const suffix = snapshot.mode === "encrypt" ? "encrypted" : "decrypted";
+        saveBlob(
+          new Blob([snapshot.text], { type: "text/plain;charset=utf-8" }),
+          `ket-qua.${suffix}.txt`,
+        );
+      } else {
+        const download = await caesarApi.downloadFile({
+          file: snapshot.file!,
+          rawKey: snapshot.keyValue,
+          action: snapshot.mode,
+        });
+        saveBlob(download.blob, download.filename);
+      }
+      setNotice({ kind: "success", message: "Đã tải kết quả." });
+    } catch (error) {
+      setResult(null);
+      setProcessingStatus("error");
+      setNotice({ kind: "error", message: userFacingError(error) });
+    } finally {
+      requestInFlight.current = false;
       setIsLoading(false);
     }
   }
 
   function resetInput() {
-    fileReadVersion.current += 1;
-    setText("");
-    setFile(null);
-    setFileText("");
-    setNotice(null);
+    if (isLoading) return;
+    if (inputType === "text") {
+      setTextState("");
+    } else {
+      fileReadVersion.current += 1;
+      setFileState(null);
+      setFileText("");
+    }
+    clearDerivedState();
   }
 
   async function updateFile(nextFile: File | null) {
+    if (isLoading) return;
     const readVersion = ++fileReadVersion.current;
-    setFile(nextFile);
+    setFileState(nextFile);
     setFileText("");
-    const validationError = nextFile ? validateInput("file", "", nextFile) : null;
+    clearDerivedState();
+
     const canReadFile =
       nextFile &&
       /\.txt$/i.test(nextFile.name) &&
       nextFile.size > 0 &&
       nextFile.size <= MAX_FILE_BYTES;
-
-    setNotice(validationError ? { kind: "error", message: validationError } : null);
-
     if (!canReadFile) return;
 
     try {
@@ -115,35 +196,33 @@ export function useCaesarCipher() {
     }
   }
 
-  function updateKey(nextKey: string) {
-    setKey(nextKey);
-    const parsedNextKey = parseKey(nextKey);
-    setNotice(
-      nextKey.trim() && parsedNextKey === null
-        ? { kind: "error", message: "Khóa phải là số nguyên." }
-        : null,
-    );
-  }
-
   function loadExample() {
+    if (isLoading) return;
     fileReadVersion.current += 1;
-    setInputType("text");
-    setText("Hello World");
-    setKey("3");
-    setResult(null);
-    setProcessingStatus("idle");
-    setNotice(null);
+    setInputTypeState("text");
+    setTextState("Hello World");
+    setKeyState("3");
+    clearDerivedState();
   }
 
   function clearResult() {
-    setResult(null);
-    setProcessingStatus("idle");
+    if (isLoading) return;
+    clearDerivedState();
+  }
+
+  function resetAll() {
+    if (isLoading) return;
+    fileReadVersion.current += 1;
+    setModeState("encrypt");
+    setInputTypeState("text");
+    setTextState("");
+    setFileState(null);
+    setFileText("");
+    setKeyState("");
+    clearDerivedState();
   }
 
   return {
-    algorithm,
-    setAlgorithm,
-    isAlgorithmAvailable,
     mode,
     setMode,
     inputType,
@@ -154,7 +233,7 @@ export function useCaesarCipher() {
     fileText,
     setFile: updateFile,
     key,
-    setKey: updateKey,
+    setKey,
     normalizedKey: parsedKey === null ? null : normalizeKey(parsedKey),
     result,
     clearResult,
@@ -166,7 +245,11 @@ export function useCaesarCipher() {
     keyError,
     canSubmit,
     processCipher,
+    downloadResult,
     resetInput,
+    resetAll,
     loadExample,
   };
 }
+
+export type CaesarCipherController = ReturnType<typeof useCaesarCipher>;

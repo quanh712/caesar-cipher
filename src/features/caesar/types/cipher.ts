@@ -1,24 +1,27 @@
 export type CipherMode = "encrypt" | "decrypt";
-export type CipherAlgorithm = "caesar" | "hill" | "huffman";
 export type InputType = "text" | "file";
 export type NoticeKind = "success" | "error";
 export type ProcessingStatus = "idle" | "loading" | "success" | "error";
 
 export interface CaesarRequest {
   text: string;
-  key: number;
+  keyToken: string;
 }
 
-export interface CaesarResponse {
-  success: boolean;
-  result?: string;
-  message?: string;
+export interface CaesarSuccessResponse {
+  success: true;
+  result: string;
 }
 
 export interface FileRequest {
   file: File;
-  key: number;
+  rawKey: string;
   action: CipherMode;
+}
+
+export interface DownloadResponse {
+  blob: Blob;
+  filename: string;
 }
 
 export interface NoticeState {
@@ -32,6 +35,7 @@ export interface CipherResultSnapshot {
   mode: CipherMode;
   inputType: InputType;
   fileName?: string;
+  file?: File;
   keyValue: string;
   normalizedKey: number;
 }

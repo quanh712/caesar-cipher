@@ -1,13 +1,18 @@
 import type { InputType } from "../types/cipher";
 
-export const MAX_FILE_BYTES = 1024 * 1024;
+export const MAX_FILE_BYTES = 5 * 1024 * 1024;
+export const MAX_FILE_KEY_LENGTH = 32;
 
-export function parseKey(value: string): number | null {
+export function parseKey(value: string, inputType: InputType = "text"): bigint | null {
   const trimmedValue = value.trim();
-  if (!/^-?\d+$/.test(trimmedValue)) return null;
+  if (!/^[+-]?\d+$/.test(trimmedValue)) return null;
+  if (inputType === "file" && trimmedValue.length > MAX_FILE_KEY_LENGTH) return null;
 
-  const parsedValue = Number(trimmedValue);
-  return Number.isSafeInteger(parsedValue) ? parsedValue : null;
+  try {
+    return BigInt(trimmedValue);
+  } catch {
+    return null;
+  }
 }
 
 export function validateInput(
@@ -16,12 +21,12 @@ export function validateInput(
   file: File | null,
 ): string | null {
   if (inputType === "text") {
-    return text.trim() ? null : "Văn bản không được để trống.";
+    return text.length > 0 ? null : "Văn bản không được để trống.";
   }
 
   if (!file) return "Vui lòng chọn file.";
-  if (!/\.txt$/i.test(file.name)) return "Chỉ hỗ trợ file .txt.";
+  if (!/\.txt$/i.test(file.name)) return "Chỉ chấp nhận file .txt.";
+  if (file.size > MAX_FILE_BYTES) return "File vượt quá dung lượng tối đa 5 MB.";
   if (file.size === 0) return "File không được để trống.";
-  if (file.size > MAX_FILE_BYTES) return "File không được vượt quá 1 MB.";
   return null;
 }

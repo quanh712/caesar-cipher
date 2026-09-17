@@ -25,7 +25,7 @@ export function CipherModeSelector({ value, disabled, onChange }: CipherModeSele
           >
             <span aria-hidden="true">{mode === "encrypt" ? "🔒" : "🔓"}</span>
             <span>
-              <small>{mode === "encrypt" ? "Encode" : "Decode"}</small>
+              <small>Chế độ</small>
               {mode === "encrypt" ? "Mã hóa" : "Giải mã"}
             </span>
           </button>

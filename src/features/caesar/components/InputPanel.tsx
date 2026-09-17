@@ -1,11 +1,12 @@
 import { useRef, useState } from "react";
-import type { InputType } from "../types/cipher";
+import type { CipherMode, InputType } from "../types/cipher";
 import { MAX_FILE_BYTES } from "../utils/validation";
 import { ColorizedText } from "./ColorizedText";
 import { HighlightedTextArea } from "./HighlightedTextArea";
 
 interface InputPanelProps {
   inputType: InputType;
+  mode: CipherMode;
   text: string;
   file: File | null;
   fileText: string;
@@ -23,14 +24,20 @@ export function InputPanel(props: InputPanelProps) {
   const [isDragging, setIsDragging] = useState(false);
 
   function selectFile(file: File | undefined) {
-    if (file) void props.onFileChange(file);
+    if (!props.disabled && file) void props.onFileChange(file);
+  }
+
+  function formatSize(bytes: number) {
+    if (bytes < 1024) return `${bytes} byte`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
+    return `${(bytes / 1024 / 1024).toFixed(2)} MiB`;
   }
 
   return (
     <section>
       <div className="section-label">
         <span>Đầu vào</span>
-        <div className="segmented" aria-label="Loại đầu vào">
+        <div className="segmented" role="group" aria-label="Nguồn đầu vào">
           {(["text", "file"] as const).map((type) => (
             <button
               className={props.inputType === type ? "is-active" : ""}
@@ -38,8 +45,9 @@ export function InputPanel(props: InputPanelProps) {
               type="button"
               onClick={() => props.onInputTypeChange(type)}
               disabled={props.disabled}
+              aria-pressed={props.inputType === type}
             >
-              {type === "text" ? "Text" : "File .txt"}
+              {type === "text" ? "Văn bản" : "File .txt"}
             </button>
           ))}
         </div>
@@ -47,23 +55,31 @@ export function InputPanel(props: InputPanelProps) {
 
       <div className="panel">
         <div className="panel__header">
-          <h2>{props.inputType === "text" ? "Nội dung" : "Tệp văn bản"}</h2>
+          <h2>
+            {props.inputType === "file"
+              ? "Tệp văn bản"
+              : props.mode === "encrypt"
+                ? "Bản rõ"
+                : "Bản mã"}
+          </h2>
           <div className="button-group">
             <button
               className="button button--secondary"
               type="button"
               onClick={props.onCopy}
-              disabled={props.inputType === "text" ? !props.text : !props.fileText}
+              disabled={
+                props.disabled || (props.inputType === "text" ? !props.text : !props.fileText)
+              }
             >
-              Copy
+              Sao chép
             </button>
             <button
               className="button button--secondary"
               type="button"
               onClick={props.onClear}
-              disabled={props.disabled}
+              disabled={props.disabled || (props.inputType === "text" ? !props.text : !props.file)}
             >
-              Clear
+              Xóa
             </button>
           </div>
         </div>
@@ -94,7 +110,7 @@ export function InputPanel(props: InputPanelProps) {
                   <span className="file-extension">TXT</span>
                   <span className="file-card__meta">
                     <strong>{props.file.name}</strong>
-                    <small>{(props.file.size / 1024).toFixed(1)} KB</small>
+                    <small>{formatSize(props.file.size)}</small>
                   </span>
                   <div className="button-group">
                     <button
@@ -103,7 +119,7 @@ export function InputPanel(props: InputPanelProps) {
                       onClick={() => fileInputRef.current?.click()}
                       disabled={props.disabled}
                     >
-                      Change
+                      Đổi file
                     </button>
                     <button
                       className="button button--secondary"
@@ -111,7 +127,7 @@ export function InputPanel(props: InputPanelProps) {
                       onClick={() => props.onFileChange(null)}
                       disabled={props.disabled}
                     >
-                      Remove
+                      Gỡ file
                     </button>
                   </div>
                 </div>
@@ -123,8 +139,22 @@ export function InputPanel(props: InputPanelProps) {
             ) : (
               <div
                 className={isDragging ? "file-picker file-picker--dragging" : "file-picker"}
+                role="button"
+                tabIndex={props.disabled ? -1 : 0}
+                aria-label="Chọn hoặc kéo thả file .txt"
+                aria-disabled={props.disabled}
+                onClick={() => {
+                  if (!props.disabled) fileInputRef.current?.click();
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    if (!props.disabled) fileInputRef.current?.click();
+                  }
+                }}
                 onDragEnter={(event) => {
                   event.preventDefault();
+                  if (props.disabled) return;
                   setIsDragging(true);
                 }}
                 onDragOver={(event) => event.preventDefault()}
@@ -135,6 +165,7 @@ export function InputPanel(props: InputPanelProps) {
                 onDrop={(event) => {
                   event.preventDefault();
                   setIsDragging(false);
+                  if (props.disabled) return;
                   selectFile(event.dataTransfer.files[0]);
                 }}
               >
@@ -143,12 +174,17 @@ export function InputPanel(props: InputPanelProps) {
                 <button
                   className="button button--secondary"
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
                   disabled={props.disabled}
                 >
                   Chọn file
                 </button>
-                <small>Dung lượng tối đa {MAX_FILE_BYTES / 1024 / 1024} MB</small>
+                <small>
+                  Chỉ nhận .txt · tối đa {MAX_FILE_BYTES / 1024 / 1024} MiB = 5.242.880 byte
+                </small>
               </div>
             )}
           </div>
@@ -156,12 +192,16 @@ export function InputPanel(props: InputPanelProps) {
 
         <div
           className={`status ${props.inputType === "text" ? (props.text.length === 0 ? "" : props.error ? "status--error" : "status--success") : !props.file ? "" : props.error ? "status--error" : "status--success"}`}
+          role="status"
+          aria-live="polite"
         >
           {props.inputType === "text" && props.text.length === 0
             ? "Chưa có dữ liệu"
             : props.inputType === "file" && !props.file
               ? "Chưa chọn file"
-              : (props.error ?? "Đầu vào hợp lệ.")}
+              : props.error
+                ? `! ${props.error}`
+                : "✓ Đầu vào hợp lệ."}
         </div>
       </div>
     </section>

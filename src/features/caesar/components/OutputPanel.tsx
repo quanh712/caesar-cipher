@@ -1,10 +1,12 @@
 import { useState } from "react";
-import type { CipherResultSnapshot, ProcessingStatus } from "../types/cipher";
+import type { CipherMode, CipherResultSnapshot, ProcessingStatus } from "../types/cipher";
 import { ColorizedText } from "./ColorizedText";
 
 interface OutputPanelProps {
   result: CipherResultSnapshot | null;
+  mode: CipherMode;
   processingStatus: ProcessingStatus;
+  disabled: boolean;
   onClear: () => void;
   onCopy: () => void;
   onDownload: () => void;
@@ -28,51 +30,51 @@ export function OutputPanel(props: OutputPanelProps) {
       <div className="section-label">Kết quả</div>
       <div className="panel">
         <div className="panel__header">
-          <h2>Output</h2>
+          <h2>{props.mode === "encrypt" ? "Bản mã" : "Bản rõ"}</h2>
           <div className="panel-tabs" role="tablist" aria-label="Kiểu hiển thị kết quả">
             <button
               type="button"
               role="tab"
               aria-selected={view === "text"}
               onClick={() => setView("text")}
+              disabled={props.disabled}
             >
-              Text
+              Văn bản
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={view === "stats"}
               onClick={() => setView("stats")}
+              disabled={props.disabled}
             >
               Phân tích
             </button>
           </div>
           <div className="button-group">
-            {props.result?.inputType === "file" && (
-              <button
-                className="button button--secondary"
-                onClick={props.onDownload}
-                disabled={!props.result}
-                type="button"
-              >
-                Download
-              </button>
-            )}
+            <button
+              className="button button--secondary"
+              onClick={props.onDownload}
+              disabled={!props.result || props.disabled}
+              type="button"
+            >
+              Tải kết quả
+            </button>
             <button
               className="button button--secondary"
               onClick={props.onCopy}
-              disabled={!props.result}
+              disabled={!props.result || props.disabled}
               type="button"
             >
-              Copy
+              Sao chép
             </button>
             <button
               className="button button--secondary"
               onClick={props.onClear}
-              disabled={!props.result}
+              disabled={!props.result || props.disabled}
               type="button"
             >
-              Clear
+              Xóa
             </button>
           </div>
         </div>
@@ -88,15 +90,21 @@ export function OutputPanel(props: OutputPanelProps) {
           <dl className="stats-list">
             <div>
               <dt>Chế độ</dt>
-              <dd>{props.result?.mode ?? "-"}</dd>
+              <dd>
+                {props.result?.mode === "encrypt"
+                  ? "Mã hóa"
+                  : props.result?.mode === "decrypt"
+                    ? "Giải mã"
+                    : "-"}
+              </dd>
             </div>
             <div>
               <dt>Nguồn</dt>
               <dd>
                 {props.result?.inputType === "text"
-                  ? "text"
+                  ? "Văn bản"
                   : props.result
-                    ? `file · ${props.result.fileName ?? "-"}`
+                    ? `File · ${props.result.fileName ?? "-"}`
                     : "-"}
               </dd>
             </div>
@@ -126,15 +134,15 @@ export function OutputPanel(props: OutputPanelProps) {
         )}
         <div
           className={`status ${props.processingStatus === "success" ? "status--success" : props.processingStatus === "error" ? "status--error" : ""}`}
+          role="status"
+          aria-live="polite"
         >
           {props.processingStatus === "loading"
             ? "Đang gửi yêu cầu…"
             : props.processingStatus === "error"
-              ? props.result
-                ? "Xử lý thất bại · Kết quả trước được giữ lại"
-                : "Xử lý thất bại"
+              ? "! Xử lý thất bại"
               : props.result
-                ? `Xử lý thành công · ${props.result.text.length} ký tự`
+                ? `✓ Xử lý thành công · ${props.result.text.length} ký tự`
                 : "Chưa xử lý"}
         </div>
       </div>

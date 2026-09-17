@@ -7,8 +7,14 @@ interface CipherConfigProps {
 }
 
 export function CipherConfig(props: CipherConfigProps) {
-  const shouldShowNormalizedKey =
-    props.normalizedKey !== null && Number(props.value) !== props.normalizedKey;
+  let shouldShowNormalizedKey = false;
+  if (props.normalizedKey !== null) {
+    try {
+      shouldShowNormalizedKey = BigInt(props.value.trim()) !== BigInt(props.normalizedKey);
+    } catch {
+      shouldShowNormalizedKey = false;
+    }
+  }
 
   return (
     <section className="config-section">
@@ -16,7 +22,7 @@ export function CipherConfig(props: CipherConfigProps) {
       <p>Nhập số nguyên dùng để dịch chuyển bảng chữ cái. Khóa được chuẩn hóa về khoảng 0–25.</p>
       <div className="panel">
         <div className="panel__header">
-          <h2>Khóa</h2>
+          <h2>Khóa dịch chuyển</h2>
         </div>
         <div className="key-control">
           <input
@@ -31,8 +37,14 @@ export function CipherConfig(props: CipherConfigProps) {
         <div className="key-note">Số âm hoặc lớn hơn 25 vẫn hợp lệ: 29 → 3, −3 → 23, 26 → 0.</div>
         <div
           className={`status ${props.error ? "status--error" : props.normalizedKey === null ? "" : "status--success"}`}
+          role="status"
+          aria-live="polite"
         >
-          {props.error ?? (props.normalizedKey === null ? "Chưa nhập khóa" : "Khóa hợp lệ")}
+          {props.error
+            ? `! ${props.error}`
+            : props.normalizedKey === null
+              ? "Chưa nhập khóa"
+              : "✓ Khóa hợp lệ"}
         </div>
       </div>
     </section>

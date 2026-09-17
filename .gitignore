@@ -10,6 +10,7 @@ test-results
 .env.local
 .env.*
 !.env.example
+!.env.mock
 !.env.production.example
 *.log
 .DS_Store

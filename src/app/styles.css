@@ -39,6 +39,13 @@ button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
 }
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid #00a3d7;
+  outline-offset: 2px;
+}
 
 .nav {
   border-bottom: 1px solid var(--border);
@@ -92,6 +99,21 @@ button:disabled {
   font-size: clamp(28px, 4vw, 36px);
   letter-spacing: -0.03em;
 }
+.hero__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.mock-badge {
+  padding: 4px 8px;
+  border: 1px solid #f59f00;
+  border-radius: 999px;
+  background: #fff9db;
+  color: #8f5b00;
+  font-size: 12px;
+  font-weight: 750;
+}
 .hero p {
   max-width: 760px;
   margin: 0;
@@ -101,51 +123,6 @@ button:disabled {
   padding-top: 24px;
 }
 
-.algorithm-section {
-  margin-bottom: 22px;
-}
-.algorithm-selector {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-.algorithm-card {
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  border: 1px solid #d4d4d8;
-  border-radius: 9px;
-  background: white;
-  text-align: left;
-}
-.algorithm-card:hover {
-  border-color: #a1a1aa;
-  background: var(--surface);
-}
-.algorithm-card--active {
-  border-color: #18181b;
-  box-shadow: inset 0 0 0 1px #18181b;
-}
-.algorithm-card__name {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-weight: 750;
-}
-.algorithm-card__name small {
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: #f4f4f5;
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 600;
-}
-.algorithm-card__description {
-  color: var(--muted);
-  font-size: 13px;
-}
 .mode-section {
   margin-bottom: 24px;
 }
@@ -187,22 +164,6 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  color: var(--muted);
-  font-size: 14px;
-}
-.availability-panel {
-  min-height: 220px;
-  padding: 32px;
-  display: grid;
-  place-content: center;
-  gap: 6px;
-  border: 1px dashed #d4d4d8;
-  border-radius: 10px;
-  background: var(--surface);
-  text-align: center;
-}
-.availability-panel span {
-  max-width: 560px;
   color: var(--muted);
   font-size: 14px;
 }
@@ -607,9 +568,6 @@ button:disabled {
 
 @media (max-width: 800px) {
   .workspace__columns {
-    grid-template-columns: 1fr;
-  }
-  .algorithm-selector {
     grid-template-columns: 1fr;
   }
   .mode-selector {

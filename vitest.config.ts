@@ -3,6 +3,9 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    "import.meta.env.VITE_USE_MOCK_API": JSON.stringify("true"),
+  },
   test: {
     environment: "jsdom",
     globals: true,

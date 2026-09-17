@@ -1,19 +1,25 @@
 import { CaesarWorkspace } from "../features/caesar/components/CaesarWorkspace";
+import { useCaesarCipher } from "../features/caesar/hooks/useCaesarCipher";
+import { isMockApiEnabled } from "../features/caesar/services/caesarApi";
 import { AppHeader } from "../shared/components/AppHeader";
 
 export function App() {
+  const cipher = useCaesarCipher();
+
   return (
     <>
-      <AppHeader />
+      <AppHeader disabled={cipher.isLoading} onReset={cipher.resetAll} />
       <main className="page">
         <header className="hero">
-          <h1>Cipher Workbench</h1>
+          <div className="hero__title">
+            <h1>Cipher Workbench</h1>
+            {isMockApiEnabled && <span className="mock-badge">Bản demo giả lập</span>}
+          </div>
           <p>
-            Mã hóa và giải mã văn bản hoặc file với các thuật toán mật mã trong cùng một workspace
-            trực quan.
+            Mã hóa và giải mã văn bản hoặc file bằng Caesar Cipher trong một workspace trực quan.
           </p>
         </header>
-        <CaesarWorkspace />
+        <CaesarWorkspace cipher={cipher} />
       </main>
     </>
   );

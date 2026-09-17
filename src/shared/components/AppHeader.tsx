@@ -1,4 +1,9 @@
-export function AppHeader() {
+interface AppHeaderProps {
+  disabled: boolean;
+  onReset: () => void;
+}
+
+export function AppHeader({ disabled, onReset }: AppHeaderProps) {
   return (
     <nav className="nav" aria-label="Điều hướng chính">
       <div className="nav__inner">
@@ -6,7 +11,7 @@ export function AppHeader() {
           CIPHER WORKBENCH
         </a>
         <div className="nav__actions">
-          <button className="refresh-button" type="button" onClick={() => window.location.reload()}>
+          <button className="refresh-button" type="button" onClick={onReset} disabled={disabled}>
             <span aria-hidden="true">↻</span>
             Làm mới
           </button>

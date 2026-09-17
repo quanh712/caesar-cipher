@@ -1,9 +1,9 @@
-export function normalizeKey(key: number): number {
-  return ((key % 26) + 26) % 26;
+export function normalizeKey(key: bigint): number {
+  return Number(((key % 26n) + 26n) % 26n);
 }
 
 export function shiftText(text: string, key: number): string {
-  const normalizedKey = normalizeKey(key);
+  const normalizedKey = ((key % 26) + 26) % 26;
 
   return Array.from(text, (character) => {
     const code = character.charCodeAt(0);

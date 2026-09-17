@@ -3,10 +3,10 @@ import { normalizeKey, shiftText } from "./caesar";
 
 describe("Caesar utilities", () => {
   it.each([
-    [3, 3],
-    [29, 3],
-    [-3, 23],
-    [26, 0],
+    [3n, 3],
+    [29n, 3],
+    [-3n, 23],
+    [26n, 0],
   ])("normalizes %s to %s", (input, expected) => {
     expect(normalizeKey(input)).toBe(expected);
   });
