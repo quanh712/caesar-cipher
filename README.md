@@ -1,6 +1,6 @@
 # Cipher Workbench Frontend
 
-React/Vite frontend cho Caesar Cipher Week 1. UI tích hợp theo Backend contract được ghim tại
+React/Vite frontend cho Caesar, Vigenère và Playfair. UI tích hợp theo Backend contract được ghim tại
 [`docs/BACKEND_CONTRACT.md`](docs/BACKEND_CONTRACT.md); yêu cầu riêng của giao diện nằm tại
 [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md).
 
@@ -21,15 +21,6 @@ Swagger và schema Backend:
 - <http://localhost:8000/docs>
 - <http://localhost:8000/openapi.json>
 
-## Chạy độc lập bằng mock
-
-```bash
-npm run dev:mock
-```
-
-Mock là opt-in và UI luôn hiển thị `Bản demo giả lập`. Không dùng chế độ này để nghiệm thu tích hợp
-hoặc production.
-
 ## Docker production
 
 Production chạy FE/Nginx và FastAPI trong hai container, cùng origin qua Nginx:
@@ -43,17 +34,6 @@ Mặc định ứng dụng chỉ bind tại `http://127.0.0.1:8080`; Backend kh�
 cổng `8000`. Hướng dẫn VPS, HTTPS, rate limit, kiểm tra và rollback nằm tại
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
-## Docker mock preview
-
-Docker trong repo FE chỉ là bản preview độc lập, không phải runtime production:
-
-```bash
-docker compose -f docker-compose.preview.yml up --build
-```
-
-Mở `http://localhost:8081`. Preview luôn dùng mock và không được dùng để nghiệm
-thu tích hợp hoặc triển khai production.
-
 ## Kiểm tra
 
 ```bash
@@ -61,7 +41,7 @@ npm run check
 npm run test:e2e
 ```
 
-Khi Backend thật đang chạy ở cổng `8000`:
+Integration test tự build và khởi động Backend sibling bằng Docker tại cổng riêng `18000`:
 
 ```bash
 npm run test:e2e:integration
@@ -73,5 +53,6 @@ Khi production Compose stack đang chạy tại `127.0.0.1:8080`:
 npm run test:e2e:production
 ```
 
-`test:e2e` dùng mock đúng contract; `test:e2e:integration` không bật mock và gọi Backend qua Vite
-proxy.
+`test:e2e` và `test:e2e:integration` đều gọi Backend thật qua Vite proxy. Cổng `18000` tránh dùng
+nhầm service dev đang chạy ở `8000`. Có thể đổi đường dẫn sibling bằng `BACKEND_CONTEXT` và cổng
+bằng `BACKEND_INTEGRATION_PORT`; script sẽ dọn container integration khi Playwright kết thúc.

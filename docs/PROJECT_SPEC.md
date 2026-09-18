@@ -43,15 +43,11 @@ Contract tích hợp không được định nghĩa lại trong tài liệu này
   `ket-qua.decrypted.txt`.
 - Download file dùng filename trong `Content-Disposition`; Backend quyết định BOM và nội dung.
 
-## 5. Mock ngoại lệ
+## 5. Runtime
 
-Mock là ngoại lệ duy nhất so với quy tắc “không tính result Caesar trong browser”:
-
-- `npm run dev` luôn dùng API thật qua proxy `/api` đến `localhost:8000`.
-- `npm run dev:mock` mới bật mock.
-- UI hiển thị `Bản demo giả lập` khi mock đang bật.
-- Mock phải mô phỏng response, validation, file preview, attachment filename và BOM của Backend.
-- Không bật mock trong production hoặc integration test.
+- `npm run dev` dùng API thật qua proxy `/api` đến `localhost:8000`.
+- Không có runtime mock hoặc client-generated cipher result.
+- Unit/component test được mock `fetch` tại test boundary; integration test gọi Backend thật.
 
 ## 6. Definition of Done
 

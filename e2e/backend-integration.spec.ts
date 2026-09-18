@@ -2,13 +2,62 @@ import { expect, test } from "@playwright/test";
 
 test("uses the real FastAPI text contract through the Vite proxy", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByText("Bản demo giả lập")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Tạo ví dụ" }).click();
   await page.getByRole("button", { name: "Mã hóa" }).click();
 
   await expect(page.getByText("Khoor Zruog", { exact: true })).toBeVisible();
   await expect(page.getByText("Mã hóa thành công.", { exact: true })).toBeVisible();
+});
+
+test("uses the real Vigenère text contract", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("tab", { name: /Vigenère/ }).click();
+  await page.getByRole("button", { name: "Tạo ví dụ" }).click();
+
+  const requestPromise = page.waitForRequest("**/api/vigenere/encrypt");
+  await page.getByRole("button", { name: "Mã hóa" }).click();
+  const request = await requestPromise;
+
+  expect(request.postDataJSON()).toEqual({ text: "Attack at dawn!", key: "LEMON" });
+  await expect(page.getByText("Lxfopv ef rnhr!", { exact: true })).toBeVisible();
+});
+
+test("uses the real Vigenère decrypt contract", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("tab", { name: /Vigenère/ }).click();
+  await page.getByRole("radio", { name: /Giải mã/ }).click();
+  await page.getByRole("textbox", { name: "Nội dung đầu vào" }).fill("Lxfopv ef rnhr!");
+  await page.getByRole("textbox", { name: "Khóa Vigenère" }).fill("LEMON");
+
+  const requestPromise = page.waitForRequest("**/api/vigenere/decrypt");
+  await page.getByRole("button", { name: "Giải mã" }).click();
+  expect((await requestPromise).postDataJSON()).toEqual({ text: "Lxfopv ef rnhr!", key: "LEMON" });
+  await expect(page.getByText("Attack at dawn!", { exact: true })).toBeVisible();
+});
+
+test("previews and downloads a Vigenère file with two requests", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("tab", { name: /Vigenère/ }).click();
+  await page.getByRole("button", { name: "File .txt" }).click();
+  await page.getByLabel("Chọn file văn bản").setInputFiles({
+    name: "attack.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("Attack at dawn!"),
+  });
+  await page.getByRole("textbox", { name: "Khóa Vigenère" }).fill("LEMON");
+  await expect(page.getByLabel("Xem trước nội dung file")).toHaveText("Attack at dawn!");
+
+  const previewRequest = page.waitForRequest("**/api/vigenere/file");
+  await page.getByRole("button", { name: "Mã hóa" }).click();
+  expect((await previewRequest).method()).toBe("POST");
+  await expect(page.getByText("Lxfopv ef rnhr!", { exact: true })).toBeVisible();
+
+  const downloadRequest = page.waitForRequest("**/api/vigenere/file");
+  const downloadEvent = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Tải kết quả" }).click();
+  expect((await downloadRequest).method()).toBe("POST");
+  expect((await downloadEvent).suggestedFilename()).toBe("attack.encrypted.txt");
 });
 
 test("sends a large key as an exact JSON integer token", async ({ page }) => {

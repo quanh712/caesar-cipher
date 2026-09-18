@@ -46,7 +46,7 @@ Tạo thư mục triển khai và clone hai repo cạnh nhau:
 Baseline Backend được chấp nhận:
 
 ```text
-9b5cfb2bf75550a8c9295b06e2d0b8dc9e825be4
+1792a29a8925dc7122ebbe62fe55caef14a00a18
 ```
 
 Checkout SHA đã duyệt ở từng repo. Không deploy trực tiếp một nhánh đang di chuyển

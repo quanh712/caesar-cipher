@@ -9,8 +9,6 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 
 COPY . .
 
-# Production must always use the same-origin Backend API.
-ENV VITE_USE_MOCK_API=false
 RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime

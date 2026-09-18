@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
+import { formatFileSize } from "../../../shared/utils/formatFileSize";
+import { MAX_TEXT_FILE_BYTES } from "../../../shared/utils/textFileValidation";
+import { ColorizedText } from "../../../shared/components/ColorizedText";
 import type { CipherMode, InputType } from "../types/cipher";
-import { MAX_FILE_BYTES } from "../utils/validation";
-import { ColorizedText } from "./ColorizedText";
 import { HighlightedTextArea } from "./HighlightedTextArea";
 
 interface InputPanelProps {
@@ -25,12 +26,6 @@ export function InputPanel(props: InputPanelProps) {
 
   function selectFile(file: File | undefined) {
     if (!props.disabled && file) void props.onFileChange(file);
-  }
-
-  function formatSize(bytes: number) {
-    if (bytes < 1024) return `${bytes} byte`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
-    return `${(bytes / 1024 / 1024).toFixed(2)} MiB`;
   }
 
   return (
@@ -110,7 +105,7 @@ export function InputPanel(props: InputPanelProps) {
                   <span className="file-extension">TXT</span>
                   <span className="file-card__meta">
                     <strong>{props.file.name}</strong>
-                    <small>{formatSize(props.file.size)}</small>
+                    <small>{formatFileSize(props.file.size)}</small>
                   </span>
                   <div className="button-group">
                     <button
@@ -139,19 +134,6 @@ export function InputPanel(props: InputPanelProps) {
             ) : (
               <div
                 className={isDragging ? "file-picker file-picker--dragging" : "file-picker"}
-                role="button"
-                tabIndex={props.disabled ? -1 : 0}
-                aria-label="Chọn hoặc kéo thả file .txt"
-                aria-disabled={props.disabled}
-                onClick={() => {
-                  if (!props.disabled) fileInputRef.current?.click();
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    if (!props.disabled) fileInputRef.current?.click();
-                  }
-                }}
                 onDragEnter={(event) => {
                   event.preventDefault();
                   if (props.disabled) return;
@@ -183,7 +165,7 @@ export function InputPanel(props: InputPanelProps) {
                   Chọn file
                 </button>
                 <small>
-                  Chỉ nhận .txt · tối đa {MAX_FILE_BYTES / 1024 / 1024} MiB = 5.242.880 byte
+                  Chỉ nhận .txt · tối đa {MAX_TEXT_FILE_BYTES / 1024 / 1024} MiB = 5.242.880 byte
                 </small>
               </div>
             )}

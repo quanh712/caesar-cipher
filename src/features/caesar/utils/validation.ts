@@ -1,6 +1,6 @@
 import type { InputType } from "../types/cipher";
+import { validateTextFile } from "../../../shared/utils/textFileValidation";
 
-export const MAX_FILE_BYTES = 5 * 1024 * 1024;
 export const MAX_FILE_KEY_LENGTH = 32;
 
 export function parseKey(value: string, inputType: InputType = "text"): bigint | null {
@@ -24,9 +24,5 @@ export function validateInput(
     return text.length > 0 ? null : "Văn bản không được để trống.";
   }
 
-  if (!file) return "Vui lòng chọn file.";
-  if (!/\.txt$/i.test(file.name)) return "Chỉ chấp nhận file .txt.";
-  if (file.size > MAX_FILE_BYTES) return "File vượt quá dung lượng tối đa 5 MB.";
-  if (file.size === 0) return "File không được để trống.";
-  return null;
+  return validateTextFile(file);
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ColorizedText } from "./ColorizedText";
+import { ColorizedText } from "../../../shared/components/ColorizedText";
 
 interface HighlightedTextAreaProps {
   value: string;

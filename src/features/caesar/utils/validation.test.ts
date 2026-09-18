@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { MAX_FILE_BYTES, parseKey, validateInput } from "./validation";
+import { MAX_TEXT_FILE_BYTES } from "../../../shared/utils/textFileValidation";
+import { parseKey, validateInput } from "./validation";
 
 describe("validation", () => {
   it("accepts signed integer keys only", () => {
@@ -21,10 +22,10 @@ describe("validation", () => {
       "Chỉ chấp nhận file .txt.",
     );
     expect(
-      validateInput("file", "", new File([new Uint8Array(MAX_FILE_BYTES + 1)], "large.txt")),
+      validateInput("file", "", new File([new Uint8Array(MAX_TEXT_FILE_BYTES + 1)], "large.txt")),
     ).toBe("File vượt quá dung lượng tối đa 5 MB.");
     expect(
-      validateInput("file", "", new File([new Uint8Array(MAX_FILE_BYTES)], "limit.TXT")),
+      validateInput("file", "", new File([new Uint8Array(MAX_TEXT_FILE_BYTES)], "limit.TXT")),
     ).toBeNull();
   });
 });

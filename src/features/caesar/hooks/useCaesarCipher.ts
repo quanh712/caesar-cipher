@@ -8,21 +8,14 @@ import type {
   ProcessingStatus,
 } from "../types/cipher";
 import { normalizeKey } from "../utils/caesar";
-import { MAX_FILE_BYTES, parseKey, validateInput } from "../utils/validation";
+import { parseKey, validateInput } from "../utils/validation";
+import { saveBlob } from "../../../shared/utils/download";
+import { MAX_TEXT_FILE_BYTES, readTextFile } from "../../../shared/utils/textFileValidation";
 
 function userFacingError(error: unknown) {
   return error instanceof CaesarApiError
     ? error.message
     : "Không thể kết nối tới máy chủ. Vui lòng thử lại.";
-}
-
-function saveBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
 }
 
 export function useCaesarCipher() {
@@ -185,11 +178,11 @@ export function useCaesarCipher() {
       nextFile &&
       /\.txt$/i.test(nextFile.name) &&
       nextFile.size > 0 &&
-      nextFile.size <= MAX_FILE_BYTES;
+      nextFile.size <= MAX_TEXT_FILE_BYTES;
     if (!canReadFile) return;
 
     try {
-      const content = await nextFile.text();
+      const content = await readTextFile(nextFile);
       if (fileReadVersion.current === readVersion) setFileText(content);
     } catch {
       if (fileReadVersion.current === readVersion) setFileText("");

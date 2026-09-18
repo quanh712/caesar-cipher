@@ -1,0 +1,368 @@
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
+import { App } from "./App";
+
+describe("Cipher Workbench", () => {
+  it("switches between independent algorithm workspaces", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const caesar = screen.getByRole("tab", { name: /Caesar/ });
+    const playfair = screen.getByRole("tab", { name: /Playfair/ });
+    const vigenere = screen.getByRole("tab", { name: /Vigenère/ });
+
+    expect(caesar).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("textbox", { name: "Nội dung đầu vào" })).toBeInTheDocument();
+
+    await user.click(playfair);
+    expect(playfair).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("textbox", { name: "Nội dung đầu vào" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Khóa Playfair" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Mã hóa" })).toBeDisabled();
+    expect(screen.getByText(/Chưa thể xử lý Playfair/)).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("radiogroup", { name: "Chế độ" })).getByRole("radio", {
+        name: /Mã hóa/,
+      }),
+    ).toBeEnabled();
+
+    await user.click(vigenere);
+    expect(screen.getByRole("textbox", { name: "Khóa Vigenère" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Mã hóa" })).toBeDisabled();
+
+    await user.click(caesar);
+    expect(caesar).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("textbox", { name: "Nội dung đầu vào" })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("radiogroup", { name: "Chế độ" })).getByRole("radio", {
+        name: /Mã hóa/,
+      }),
+    ).toBeEnabled();
+  });
+
+  it("supports keyboard navigation for algorithm tabs", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const caesar = screen.getByRole("tab", { name: /Caesar/ });
+    caesar.focus();
+    await user.keyboard("{ArrowRight}");
+
+    expect(screen.getByRole("tab", { name: /Vigenère/ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("textbox", { name: "Khóa Vigenère" })).toBeInTheDocument();
+
+    await user.keyboard("{End}");
+    expect(screen.getByRole("tab", { name: /Playfair/ })).toHaveFocus();
+    expect(screen.getByRole("textbox", { name: "Khóa Playfair" })).toBeInTheDocument();
+  });
+
+  it("supports keyboard navigation for mode and result views", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const encrypt = screen.getByRole("radio", { name: /Mã hóa/ });
+    encrypt.focus();
+    await user.keyboard("{ArrowRight}");
+
+    const decrypt = screen.getByRole("radio", { name: /Giải mã/ });
+    expect(decrypt).toHaveFocus();
+    expect(decrypt).toHaveAttribute("aria-checked", "true");
+
+    const textTab = screen.getByRole("tab", { name: "Văn bản" });
+    const textPanelId = textTab.getAttribute("aria-controls");
+    expect(textPanelId).toBeTruthy();
+    expect(document.getElementById(textPanelId!)).toHaveAttribute("role", "tabpanel");
+
+    textTab.focus();
+    await user.keyboard("{End}");
+
+    const analysisTab = screen.getByRole("tab", { name: "Phân tích" });
+    expect(analysisTab).toHaveFocus();
+    expect(analysisTab).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tabpanel", { name: "Phân tích" })).toBeVisible();
+  });
+
+  it("keeps a separate draft for each planned algorithm", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: /Vigenère/ }));
+    await user.type(screen.getByRole("textbox", { name: "Nội dung đầu vào" }), "Vigenere draft");
+    await user.type(screen.getByRole("textbox", { name: "Khóa Vigenère" }), " Lemon ");
+
+    await user.click(screen.getByRole("tab", { name: /Playfair/ }));
+    await user.type(screen.getByRole("textbox", { name: "Nội dung đầu vào" }), "Playfair draft");
+    await user.type(screen.getByRole("textbox", { name: "Khóa Playfair" }), "Monarchy");
+
+    await user.click(screen.getByRole("tab", { name: /Vigenère/ }));
+    expect(screen.getByRole("textbox", { name: "Nội dung đầu vào" })).toHaveValue("Vigenere draft");
+    expect(screen.getByRole("textbox", { name: "Khóa Vigenère" })).toHaveValue(" Lemon ");
+
+    await user.click(screen.getByRole("tab", { name: /Playfair/ }));
+    expect(screen.getByRole("textbox", { name: "Nội dung đầu vào" })).toHaveValue("Playfair draft");
+    expect(screen.getByRole("textbox", { name: "Khóa Playfair" })).toHaveValue("Monarchy");
+  });
+
+  it("validates the accepted Vigenère key and file rules", async () => {
+    const user = userEvent.setup({ applyAccept: false });
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: /Vigenère/ }));
+    await user.type(screen.getByRole("textbox", { name: "Nội dung đầu vào" }), "   ");
+    await user.type(screen.getByRole("textbox", { name: "Khóa Vigenère" }), "   ");
+    expect(screen.getByText("✓ Đầu vào hợp lệ ở mức sơ bộ.")).toBeInTheDocument();
+    expect(screen.getByText(/Khóa Vigenère chỉ được chứa/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "File .txt" }));
+    await user.upload(
+      screen.getByLabelText("Chọn file văn bản"),
+      new File(["not read"], "message.csv", { type: "text/csv" }),
+    );
+    expect(screen.getByText(/Chỉ chấp nhận file \.txt\./)).toBeInTheDocument();
+    expect(screen.getByText(/Chưa đọc nội dung/)).toBeInTheDocument();
+  });
+
+  it("encrypts the official Vigenère example and explains its key stream", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: /Vigenère/ }));
+    await user.click(screen.getByRole("button", { name: "Tạo ví dụ" }));
+    expect(screen.getByRole("textbox", { name: "Nội dung đầu vào" })).toHaveValue(
+      "Attack at dawn!",
+    );
+    expect(screen.getByRole("textbox", { name: "Khóa Vigenère" })).toHaveValue("LEMON");
+
+    await user.click(screen.getByRole("button", { name: "Mã hóa" }));
+    expect(await screen.findByText("Lxfopv ef rnhr!", { exact: true })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Phân tích" }));
+    expect(screen.getByText("LEMONL·EM·ONLE·", { exact: true })).toBeInTheDocument();
+    expect(screen.getByText(/Dấu · là ký tự không tiêu thụ khóa/)).toBeInTheDocument();
+  });
+
+  it("decrypts the official Vigenère vector", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: /Vigenère/ }));
+    await user.click(screen.getByRole("radio", { name: /Giải mã/ }));
+    await user.type(screen.getByRole("textbox", { name: "Nội dung đầu vào" }), "Lxfopv ef rnhr!");
+    await user.type(screen.getByRole("textbox", { name: "Khóa Vigenère" }), "LEMON");
+    await user.click(screen.getByRole("button", { name: "Giải mã" }));
+
+    expect(await screen.findByText("Attack at dawn!", { exact: true })).toBeInTheDocument();
+  });
+
+  it("previews and copies the selected Vigenère file", async () => {
+    const user = userEvent.setup();
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: /Vigenère/ }));
+    await user.click(screen.getByRole("button", { name: "File .txt" }));
+    await user.upload(
+      screen.getByLabelText("Chọn file văn bản"),
+      new File(["AéA"], "unicode.TXT", { type: "text/plain" }),
+    );
+
+    const preview = await screen.findByLabelText("Xem trước nội dung file");
+    expect(preview).toHaveTextContent("AéA");
+    await user.click(within(preview.closest("section")!).getByRole("button", { name: "Sao chép" }));
+    expect(writeText).toHaveBeenCalledWith("AéA");
+  });
+
+  it("clears a draft notice when mode changes", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: /Vigenère/ }));
+    await user.type(screen.getByRole("textbox", { name: "Nội dung đầu vào" }), "Draft");
+    await user.click(screen.getAllByRole("button", { name: "Sao chép" })[0]);
+    expect(await screen.findByText("Đã sao chép đầu vào.")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("radio", { name: /Giải mã/ }));
+    expect(screen.queryByText("Đã sao chép đầu vào.")).not.toBeInTheDocument();
+  });
+
+  it("returns to Caesar when the workspace is refreshed", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: /Playfair/ }));
+    await user.type(screen.getByRole("textbox", { name: "Nội dung đầu vào" }), "Draft");
+    await user.type(screen.getByRole("textbox", { name: "Khóa Playfair" }), "Key");
+    await user.click(screen.getByRole("button", { name: /Làm mới/ }));
+
+    expect(screen.getByRole("tab", { name: /Caesar/ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("textbox", { name: "Nội dung đầu vào" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: /Playfair/ }));
+    expect(screen.getByRole("textbox", { name: "Nội dung đầu vào" })).toHaveValue("");
+    expect(screen.getByRole("textbox", { name: "Khóa Playfair" })).toHaveValue("");
+    expect(screen.getByText("Key Matrix và Digraph")).toBeInTheDocument();
+  });
+
+  it("loads the example and encrypts it", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Tạo ví dụ" }));
+    expect(screen.getByRole("textbox", { name: "Nội dung đầu vào" })).toHaveValue("Hello World");
+
+    await user.click(screen.getByRole("button", { name: "Mã hóa" }));
+    expect(
+      await screen.findByText(
+        (_, element) => element?.tagName === "PRE" && element.textContent === "Khoor Zruog",
+      ),
+    ).toBeInTheDocument();
+    expect(await screen.findByText("Mã hóa thành công.")).toBeInTheDocument();
+  });
+
+  it("shows a copy success toast", async () => {
+    const user = userEvent.setup();
+    const writeText = vi.spyOn(navigator.clipboard, "writeText");
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Tạo ví dụ" }));
+    await user.click(screen.getAllByRole("button", { name: "Sao chép" })[0]);
+
+    expect(await screen.findByText("Đã sao chép đầu vào.")).toBeInTheDocument();
+    expect(writeText).toHaveBeenCalledWith("Hello World");
+  });
+
+  it("decrypts text", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("radio", { name: /Giải mã/ }));
+    await user.type(screen.getByRole("textbox", { name: "Nội dung đầu vào" }), "Khoor Zruog");
+    await user.type(screen.getByRole("textbox", { name: "Khóa Caesar" }), "3");
+    await user.click(screen.getByRole("button", { name: "Giải mã" }));
+
+    expect(
+      await screen.findByText(
+        (_, element) => element?.tagName === "PRE" && element.textContent === "Hello World",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("accepts whitespace-only text", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.type(screen.getByRole("textbox", { name: "Nội dung đầu vào" }), "   ");
+    await user.type(screen.getByRole("textbox", { name: "Khóa Caesar" }), "3");
+
+    expect(screen.getByRole("button", { name: "Mã hóa" })).toBeEnabled();
+    await user.click(screen.getByRole("button", { name: "Mã hóa" }));
+    expect(await screen.findByText("Mã hóa thành công.")).toBeInTheDocument();
+  });
+
+  it("reports an invalid key through a toast", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.clear(screen.getByRole("textbox", { name: "Khóa Caesar" }));
+    await user.type(screen.getByRole("textbox", { name: "Khóa Caesar" }), "abc");
+
+    expect(screen.getByText(/Khóa phải là số nguyên\./)).toBeInTheDocument();
+  });
+
+  it("previews and removes a valid text file", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "File .txt" }));
+    const fileInput = screen.getByLabelText("Chọn file văn bản");
+    await user.upload(fileInput, new File(["Hello file"], "message.txt", { type: "text/plain" }));
+
+    expect(await screen.findByText("message.txt")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Đổi file" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Gỡ file" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Gỡ file" }));
+    expect(await screen.findByText("Kéo thả file .txt vào đây")).toBeInTheDocument();
+  });
+
+  it("accepts a file through drag and drop", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "File .txt" }));
+    const dropZone = screen.getByText("Kéo thả file .txt vào đây").parentElement!;
+    fireEvent.drop(dropZone, {
+      dataTransfer: { files: [new File(["Dropped"], "dropped.txt", { type: "text/plain" })] },
+    });
+
+    expect(await screen.findByText("dropped.txt")).toBeInTheDocument();
+  });
+
+  it("reports an invalid file through a toast", async () => {
+    const user = userEvent.setup({ applyAccept: false });
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "File .txt" }));
+    await user.upload(
+      screen.getByLabelText("Chọn file văn bản"),
+      new File(["invalid"], "message.csv", { type: "text/csv" }),
+    );
+
+    expect(screen.getByText(/Chỉ chấp nhận file \.txt\./)).toBeInTheDocument();
+  });
+
+  it.each([
+    ["encrypt", "Hello", "Khoor", "Mã hóa"],
+    ["decrypt", "Khoor", "Hello", "Giải mã"],
+  ] as const)("processes a file in %s mode", async (mode, source, expected, actionLabel) => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    if (mode === "decrypt") await user.click(screen.getByRole("radio", { name: /Giải mã/ }));
+    await user.click(screen.getByRole("button", { name: "File .txt" }));
+    await user.upload(
+      screen.getByLabelText("Chọn file văn bản"),
+      new File([source], "message.txt", { type: "text/plain" }),
+    );
+    await user.type(screen.getByRole("textbox", { name: "Khóa Caesar" }), "3");
+    await user.click(screen.getByRole("button", { name: actionLabel }));
+
+    expect(
+      await screen.findByText(
+        (_, element) => element?.tagName === "PRE" && element.textContent === expected,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tải kết quả" })).toBeEnabled();
+  });
+
+  it("locks request-changing controls while processing", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Tạo ví dụ" }));
+    await user.click(screen.getByRole("button", { name: "Mã hóa" }));
+
+    expect(screen.getByRole("radio", { name: /Giải mã/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "File .txt" })).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: "Khóa Caesar" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Tạo ví dụ" })).toBeDisabled();
+
+    expect(await screen.findByText("Mã hóa thành công.")).toBeInTheDocument();
+  });
+
+  it("clears stale result when input changes", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Tạo ví dụ" }));
+    await user.click(screen.getByRole("button", { name: "Mã hóa" }));
+    await screen.findByText("Mã hóa thành công.");
+
+    const input = screen.getByRole("textbox", { name: "Nội dung đầu vào" });
+    await user.clear(input);
+    await user.type(input, "Changed input");
+    expect(screen.getByText("Kết quả sẽ hiển thị ở đây sau khi xử lý.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tải kết quả" })).toBeDisabled();
+  });
+});

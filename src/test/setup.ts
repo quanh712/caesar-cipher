@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
-import { afterEach, vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
+import { shiftText } from "../features/caesar/utils/caesar";
 
 afterEach(() => {
   cleanup();
@@ -16,4 +17,85 @@ vi.stubGlobal("ResizeObserver", ResizeObserverMock);
 Object.defineProperty(navigator, "clipboard", {
   configurable: true,
   value: { writeText: vi.fn().mockResolvedValue(undefined) },
+});
+
+function vigenere(text: string, key: string, decrypt: boolean) {
+  const normalizedKey = key.toUpperCase();
+  let keyIndex = 0;
+  return Array.from(text)
+    .map((character) => {
+      const code = character.charCodeAt(0);
+      const base = code >= 65 && code <= 90 ? 65 : code >= 97 && code <= 122 ? 97 : null;
+      if (base === null) return character;
+      const shift = normalizedKey.charCodeAt(keyIndex % normalizedKey.length) - 65;
+      keyIndex += 1;
+      return String.fromCharCode(
+        base + ((((code - base + (decrypt ? -shift : shift)) % 26) + 26) % 26),
+      );
+    })
+    .join("");
+}
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+async function readFile(file: File) {
+  if (typeof file.text === "function") return file.text();
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
+}
+
+const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+  await new Promise((resolve) => window.setTimeout(resolve, 20));
+  const url = String(input);
+  const cipher = url.includes("/vigenere/") ? "vigenere" : "caesar";
+  const decrypt = url.includes("/decrypt");
+
+  if (url.endsWith("/file")) {
+    const form = init?.body as FormData;
+    const file = form.get("file") as File;
+    const key = String(form.get("key") ?? "");
+    const action = String(form.get("action"));
+    const responseMode = String(form.get("response_mode"));
+    if (!/\.txt$/i.test(file.name))
+      return json({ success: false, message: "Chỉ chấp nhận file .txt." }, 415);
+    const source = await readFile(file);
+    const result =
+      cipher === "caesar"
+        ? shiftText(source, (action === "decrypt" ? -1 : 1) * Number(BigInt(key) % 26n))
+        : vigenere(source, key, action === "decrypt");
+    if (responseMode === "file") {
+      const suffix = action === "encrypt" ? "encrypted" : "decrypted";
+      const filename = `${file.name.replace(/\.txt$/i, "")}.${suffix}.txt`;
+      return new Response(result, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+        },
+      });
+    }
+    return json({ success: true, result });
+  }
+
+  const body = JSON.parse(String(init?.body)) as { text: string; key: number | string };
+  const result =
+    cipher === "caesar"
+      ? shiftText(body.text, (decrypt ? -1 : 1) * Number(BigInt(body.key) % 26n))
+      : vigenere(body.text, String(body.key), decrypt);
+  return json({ success: true, result });
+});
+
+vi.stubGlobal("fetch", fetchMock);
+
+beforeEach(() => {
+  fetchMock.mockClear();
 });

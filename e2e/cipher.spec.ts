@@ -1,5 +1,34 @@
 import { expect, test } from "@playwright/test";
 
+test("switches between available ciphers and preserves the Playfair draft", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByRole("tab", { name: /Playfair/ }).click();
+  await expect(page.getByRole("textbox", { name: "Khóa Playfair" })).toBeVisible();
+  await expect(page.getByText("Key Matrix và Digraph")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Mã hóa" })).toBeDisabled();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(
+    false,
+  );
+  await page.getByRole("textbox", { name: "Nội dung đầu vào" }).fill("Playfair draft");
+  await page.getByRole("textbox", { name: "Khóa Playfair" }).fill("MONARCHY");
+
+  await page.getByRole("tab", { name: /Vigenère/ }).click();
+  await expect(page.getByRole("textbox", { name: "Khóa Vigenère" })).toBeVisible();
+  await page.getByRole("textbox", { name: "Nội dung đầu vào" }).fill("Vigenere draft");
+  await page.getByRole("textbox", { name: "Khóa Vigenère" }).fill("LEMON");
+  await expect(page.getByRole("button", { name: "Mã hóa" })).toBeEnabled();
+
+  await page.getByRole("tab", { name: /Playfair/ }).click();
+  await expect(page.getByRole("textbox", { name: "Nội dung đầu vào" })).toHaveValue(
+    "Playfair draft",
+  );
+  await expect(page.getByRole("textbox", { name: "Khóa Playfair" })).toHaveValue("MONARCHY");
+
+  await page.getByRole("tab", { name: /Caesar/ }).click();
+  await expect(page.getByRole("textbox", { name: "Nội dung đầu vào" })).toBeVisible();
+});
+
 test("encrypts the generated example", async ({ page }) => {
   const browserErrors: string[] = [];
   page.on("console", (message) => {
@@ -15,7 +44,6 @@ test("encrypts the generated example", async ({ page }) => {
     false,
   );
 
-  await expect(page.getByText("Bản demo giả lập")).toBeVisible();
   await page.getByRole("button", { name: "Tạo ví dụ" }).click();
   await page.getByRole("button", { name: "Mã hóa" }).click();
 
@@ -30,7 +58,7 @@ test("encrypts the generated example", async ({ page }) => {
 
 test("decrypts text", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("tab", { name: /Giải mã/ }).click();
+  await page.getByRole("radio", { name: /Giải mã/ }).click();
   await page.getByRole("textbox", { name: "Nội dung đầu vào" }).fill("Khoor Zruog");
   await page.getByRole("textbox", { name: "Khóa Caesar" }).fill("3");
   await page.getByRole("button", { name: "Giải mã" }).click();
@@ -46,7 +74,7 @@ for (const scenario of [
   test(`${scenario.mode}s and downloads a text file`, async ({ page }) => {
     await page.goto("/");
     if (scenario.mode === "decrypt") {
-      await page.getByRole("tab", { name: /Giải mã/ }).click();
+      await page.getByRole("radio", { name: /Giải mã/ }).click();
     }
     await page.getByRole("button", { name: "File .txt" }).click();
     await page.getByLabel("Chọn file văn bản").setInputFiles({

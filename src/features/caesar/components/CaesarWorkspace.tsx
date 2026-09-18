@@ -1,9 +1,9 @@
 import type { CaesarCipherController } from "../hooks/useCaesarCipher";
+import { CipherModeSelector } from "../../../shared/components/CipherModeSelector";
+import { Notification } from "../../../shared/components/Notification";
 import { AlphabetMap } from "./AlphabetMap";
 import { CipherConfig } from "./CipherConfig";
-import { CipherModeSelector } from "./CipherModeSelector";
 import { InputPanel } from "./InputPanel";
-import { Notification } from "./Notification";
 import { OutputPanel } from "./OutputPanel";
 
 interface CaesarWorkspaceProps {
@@ -31,13 +31,12 @@ export function CaesarWorkspace({ cipher }: CaesarWorkspaceProps) {
   }
 
   return (
-    <div className="workspace">
+    <div className="cipher-workspace">
       <CipherModeSelector
         value={cipher.mode}
         disabled={cipher.isLoading}
         onChange={cipher.setMode}
       />
-
       <div className="helper-row">
         <span>
           {cipher.mode === "encrypt"

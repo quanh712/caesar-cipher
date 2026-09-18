@@ -19,12 +19,8 @@ export function ColorizedText({ text }: ColorizedTextProps) {
   for (const character of text) {
     const type = getCharacterGroup(character);
     const previousGroup = groups.at(-1);
-
-    if (previousGroup?.type === type) {
-      previousGroup.value += character;
-    } else {
-      groups.push({ type, value: character });
-    }
+    if (previousGroup?.type === type) previousGroup.value += character;
+    else groups.push({ type, value: character });
   }
 
   return groups.map((group, index) => (

@@ -1,8 +1,0 @@
-services:
-  mock-preview:
-    build:
-      context: .
-      dockerfile: Dockerfile.preview
-    ports:
-      - "${FRONTEND_PORT:-8081}:80"
-    restart: unless-stopped
