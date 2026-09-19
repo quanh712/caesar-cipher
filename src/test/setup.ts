@@ -6,6 +6,8 @@ import { buildPlayfairMatrix, preparePlayfairDigraphs } from "../features/playfa
 
 afterEach(() => {
   cleanup();
+  window.localStorage.removeItem("cipher-workbench-theme");
+  delete document.documentElement.dataset.theme;
 });
 
 class ResizeObserverMock {
@@ -15,6 +17,20 @@ class ResizeObserverMock {
 }
 
 vi.stubGlobal("ResizeObserver", ResizeObserverMock);
+Object.defineProperty(window, "matchMedia", {
+  configurable: true,
+  writable: true,
+  value: vi.fn().mockImplementation((query: string): MediaQueryList => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
 Object.defineProperty(navigator, "clipboard", {
   configurable: true,
   value: {

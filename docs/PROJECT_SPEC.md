@@ -19,6 +19,8 @@ Contract tích hợp không được định nghĩa lại trong tài liệu này
 - Bảng dịch chuyển gồm hai hàng A–Z, dùng key chuẩn hóa; mapping 0 khi key không hợp lệ.
 - File panel hỗ trợ picker, kéo thả, bàn phím, preview, đổi file, gỡ file và kích thước byte/KiB/MiB.
 - Tất cả control có focus indicator, semantics phù hợp và bị khóa thật sự trong khi xử lý.
+- Header có nút icon đổi nền sáng/tối, đặt trước nút làm mới. Icon biểu thị hành động kế tiếp;
+  tooltip và `aria-label` phải mô tả rõ `Chuyển sang nền tối` hoặc `Chuyển sang nền sáng`.
 - Desktop dùng hai cột; màn hình từ 800 px trở xuống dùng một cột; không tạo horizontal scroll toàn trang.
 
 ## 3. State và hành vi
@@ -49,10 +51,31 @@ Contract tích hợp không được định nghĩa lại trong tài liệu này
 - Không có runtime mock hoặc client-generated cipher result.
 - Unit/component test được mock `fetch` tại test boundary; integration test gọi Backend thật.
 
-## 6. Definition of Done
+## 6. Giao diện sáng/tối
+
+- Theme có đúng hai giá trị `light` và `dark`, được phản ánh bằng thuộc tính `data-theme`
+  trên phần tử `<html>`.
+- Khi chưa có lựa chọn đã lưu, ứng dụng lấy `prefers-color-scheme` và tiếp tục theo dõi thay đổi
+  của hệ điều hành trong lúc trang đang mở.
+- Sau khi người dùng bấm nút theme, lựa chọn được lưu bằng key
+  `cipher-workbench-theme` trong `localStorage` và được ưu tiên ở các lần tải sau.
+- Thao tác làm mới workspace không được xóa hoặc thay đổi theme.
+- Script bootstrap phải áp dụng theme trước khi React render để tránh nháy nền sai. Script phải là
+  tài nguyên same-origin bên ngoài để tương thích CSP production không cho inline script.
+- Toàn bộ canvas, panel, control, border, trạng thái success/error và syntax highlighting dùng
+  semantic color token; dark mode không được để lại mảng nền sáng ngoài các control chủ động dùng
+  tương phản đảo.
+- Chuyển màu kéo dài khoảng `140ms`. Khi `prefers-reduced-motion: reduce`, animation và transition
+  phải được rút về gần như tức thì.
+- Nút theme dùng được bằng bàn phím, có `aria-pressed`, không phụ thuộc màu sắc để truyền đạt trạng
+  thái và không bị khóa khi một cipher request đang xử lý.
+
+## 7. Definition of Done
 
 - Format, lint, TypeScript, unit/component test và production build đều đạt.
 - Mock E2E đạt trên desktop/mobile.
 - Integration E2E đạt khi Backend baseline đang chạy tại cổng `8000`.
+- Theme E2E đạt trên desktop/mobile, gồm áp dụng theme ban đầu, chuyển theme và khôi phục lựa chọn
+  sau reload; production build chứa script bootstrap.
 - Không còn URL Backend hard-code trong runtime code, CORS assumption, `/health` API assumption,
   error `code`, giới hạn 1 MiB hoặc filename kiểu `_encrypted.txt`.

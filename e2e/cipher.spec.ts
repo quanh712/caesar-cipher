@@ -1,5 +1,22 @@
 import { expect, test } from "@playwright/test";
 
+test("switches and restores the chosen color theme", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/");
+
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.getByRole("button", { name: "Chuyển sang nền tối" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+  await page.reload();
+
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.getByRole("button", { name: "Chuyển sang nền sáng" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+});
+
 test("switches between available ciphers and preserves the Playfair draft", async ({ page }) => {
   await page.goto("/");
 
