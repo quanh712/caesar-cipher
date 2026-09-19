@@ -1,4 +1,4 @@
-# Cipher Workbench — Vigenère checkpoint và Playfair kế tiếp
+# Cipher Workbench — Tích hợp Vigenère và Playfair
 
 ## 1. Quyền ưu tiên
 
@@ -37,15 +37,14 @@ Vigenère là vertical slice đầu tiên sau Caesar:
   khác 0 byte và tối đa đúng 5 MiB. Backend vẫn là authority cho UTF-8 và precedence.
 - Unit, component test dùng mock fetch ở test boundary; Playwright integration gọi Backend thật.
 
-## 4. Playfair ở checkpoint này
+## 4. Playfair
 
-Playfair vẫn giữ workspace draft và action bị khóa cho tới giai đoạn kế tiếp. UI phải luôn giải
-thích semantics đã chốt:
+Playfair dùng Backend thật cho text và file. UI luôn giải thích semantics đã chốt:
 
 > Playfair chuẩn hóa thành chữ hoa ASCII, gộp J/I, loại định dạng và giữ filler X/Q khi giải mã;
 > kết quả không khôi phục nguyên văn đầu vào.
 
-Giai đoạn Playfair sau checkpoint Vigenère phải tuân theo:
+Luồng Playfair tuân theo:
 
 - endpoint text/file tương ứng dưới `/api/playfair/...`;
 - key và input normalize ASCII, `J→I`, matrix 5×5 bỏ `J`;

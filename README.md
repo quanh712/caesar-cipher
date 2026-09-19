@@ -1,6 +1,6 @@
 # Cipher Workbench Frontend
 
-React/Vite frontend cho Caesar, Vigenère và Playfair. UI tích hợp theo Backend contract được ghim tại
+React/Vite frontend cho Caesar, Vigenère và Playfair. Cả ba thuật toán gọi Backend thật theo contract được ghim tại
 [`docs/BACKEND_CONTRACT.md`](docs/BACKEND_CONTRACT.md); yêu cầu riêng của giao diện nằm tại
 [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md).
 
