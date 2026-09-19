@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { CaesarWorkspace } from "../features/caesar/components/CaesarWorkspace";
 import { useCaesarCipher } from "../features/caesar/hooks/useCaesarCipher";
 import { PlayfairWorkspace } from "../features/playfair/components/PlayfairWorkspace";
-import { usePlayfairDraft } from "../features/playfair/hooks/usePlayfairDraft";
+import { usePlayfairCipher } from "../features/playfair/hooks/usePlayfairCipher";
 import { VigenereWorkspace } from "../features/vigenere/components/VigenereWorkspace";
 import { useVigenereCipher } from "../features/vigenere/hooks/useVigenereCipher";
 import { CipherAlgorithmSelector } from "../shared/components/CipherAlgorithmSelector";
@@ -13,9 +13,9 @@ import type { CipherAlgorithm } from "../shared/types/cipher";
 export function App() {
   const cipher = useCaesarCipher();
   const vigenere = useVigenereCipher();
-  const playfair = usePlayfairDraft();
+  const playfair = usePlayfairCipher();
   const [algorithm, setAlgorithm] = useState<CipherAlgorithm>("caesar");
-  const isLoading = cipher.isLoading || vigenere.isLoading;
+  const isLoading = cipher.isLoading || vigenere.isLoading || playfair.isLoading;
 
   function resetWorkspace() {
     setAlgorithm("caesar");
@@ -29,13 +29,13 @@ export function App() {
     cipher.clearResult();
     cipher.setNotice(null);
     vigenere.clearResult();
-    playfair.clearDerivedState();
+    playfair.clearResult();
     setAlgorithm(nextAlgorithm);
   }
 
   const workspaces: Record<CipherAlgorithm, ReactNode> = {
     caesar: <CaesarWorkspace cipher={cipher} />,
-    playfair: <PlayfairWorkspace draft={playfair} />,
+    playfair: <PlayfairWorkspace cipher={playfair} />,
     vigenere: <VigenereWorkspace cipher={vigenere} />,
   };
 
@@ -47,7 +47,7 @@ export function App() {
           <div className="hero__title">
             <h1>Cipher Workbench</h1>
           </div>
-          <p>Mã hóa và giải mã Caesar hoặc Vigenère trực tiếp bằng kết quả từ Backend.</p>
+          <p>Mã hóa và giải mã Caesar, Vigenère hoặc Playfair bằng kết quả từ Backend.</p>
         </header>
         <div className="workspace">
           <CipherAlgorithmSelector

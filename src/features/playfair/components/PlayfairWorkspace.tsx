@@ -1,83 +1,119 @@
 import { CipherModeSelector } from "../../../shared/components/CipherModeSelector";
 import { DraftInputPanel } from "../../../shared/components/DraftInputPanel";
 import { DraftKeyConfig } from "../../../shared/components/DraftKeyConfig";
-import { DraftOutputPanel } from "../../../shared/components/DraftOutputPanel";
 import { Notification } from "../../../shared/components/Notification";
-import { PendingCipherAction } from "../../../shared/components/PendingCipherAction";
-import type { PlayfairDraftController } from "../hooks/usePlayfairDraft";
+import type { PlayfairCipherController } from "../hooks/usePlayfairCipher";
+import { PlayfairOutputPanel } from "./PlayfairOutputPanel";
 
 interface PlayfairWorkspaceProps {
-  draft: PlayfairDraftController;
+  cipher: PlayfairCipherController;
 }
 
-export function PlayfairWorkspace({ draft }: PlayfairWorkspaceProps) {
+export function PlayfairWorkspace({ cipher }: PlayfairWorkspaceProps) {
   async function copyInput() {
     try {
-      await navigator.clipboard.writeText(draft.text);
-      draft.setNotice({ kind: "success", message: "Đã sao chép đầu vào." });
+      const input = cipher.inputType === "text" ? cipher.text : cipher.fileText;
+      await navigator.clipboard.writeText(input);
+      cipher.setNotice({ kind: "success", message: "Đã sao chép đầu vào." });
     } catch {
-      draft.setNotice({ kind: "error", message: "Không thể sao chép đầu vào." });
+      cipher.setNotice({ kind: "error", message: "Không thể sao chép đầu vào." });
+    }
+  }
+
+  async function copyResult() {
+    try {
+      await navigator.clipboard.writeText(cipher.result?.text ?? "");
+      cipher.setNotice({ kind: "success", message: "Đã sao chép kết quả." });
+    } catch {
+      cipher.setNotice({ kind: "error", message: "Không thể sao chép kết quả." });
+    }
+  }
+
+  async function pasteInput() {
+    try {
+      const text = await navigator.clipboard.readText();
+      cipher.setText(text);
+      cipher.setNotice({ kind: "success", message: "Đã dán nội dung từ clipboard." });
+    } catch {
+      cipher.setNotice({ kind: "error", message: "Không thể đọc nội dung clipboard." });
     }
   }
 
   return (
     <div className="cipher-workspace">
-      <CipherModeSelector value={draft.mode} disabled={false} onChange={draft.setMode} />
+      <CipherModeSelector
+        value={cipher.mode}
+        disabled={cipher.isLoading}
+        onChange={cipher.setMode}
+      />
 
       <div className="helper-row">
         <span>
           Playfair chuẩn hóa thành chữ hoa ASCII, gộp J/I, loại định dạng và giữ filler X/Q khi giải
           mã; kết quả không khôi phục nguyên văn đầu vào.
         </span>
+        <button
+          className="button button--secondary"
+          type="button"
+          onClick={cipher.loadExample}
+          disabled={cipher.isLoading}
+        >
+          Tạo ví dụ
+        </button>
       </div>
 
       <div className="workspace__columns">
         <DraftInputPanel
-          inputType={draft.inputType}
-          mode={draft.mode}
-          text={draft.text}
-          file={draft.file}
-          error={draft.inputError}
-          onInputTypeChange={draft.setInputType}
-          onTextChange={draft.setText}
-          onFileChange={draft.setFile}
-          onClear={draft.resetInput}
+          inputType={cipher.inputType}
+          mode={cipher.mode}
+          text={cipher.text}
+          file={cipher.file}
+          fileText={cipher.fileText}
+          error={cipher.inputError}
+          disabled={cipher.isLoading}
+          fileHint="File .txt UTF-8, tối đa 5 MiB"
+          onInputTypeChange={cipher.setInputType}
+          onTextChange={cipher.setText}
+          onFileChange={cipher.setFile}
+          onClear={cipher.resetInput}
+          onPaste={pasteInput}
           onCopy={copyInput}
         />
-        <DraftOutputPanel algorithmName="Playfair" mode={draft.mode} />
+        <PlayfairOutputPanel
+          key={cipher.result ? "result" : "empty"}
+          result={cipher.result}
+          mode={cipher.mode}
+          processingStatus={cipher.processingStatus}
+          disabled={cipher.isLoading}
+          onCopy={copyResult}
+          onClear={cipher.clearResult}
+          onDownload={cipher.downloadResult}
+        />
       </div>
 
       <DraftKeyConfig
         algorithmName="Playfair"
-        value={draft.key}
-        error={draft.keyError}
-        placeholder="Ví dụ: MONARCHY"
+        value={cipher.key}
+        error={cipher.keyError}
+        placeholder="Ví dụ: PLAYFAIR EXAMPLE"
         description="Khóa Playfair được chuẩn hóa thành chữ hoa ASCII, gộp J/I và loại ký tự trùng."
         hint="Khoảng trắng và ký tự ngoài ASCII bị loại nếu khóa vẫn còn ít nhất một chữ cái A–Z."
-        onChange={draft.setKey}
+        disabled={cipher.isLoading}
+        onChange={cipher.setKey}
       />
 
-      <section className="analysis-section" aria-labelledby="playfair-analysis-title">
-        <div className="section-label" id="playfair-analysis-title">
-          Phân tích Playfair
-        </div>
-        <div className="panel analysis-empty" role="status">
-          <strong>Key Matrix và Digraph</strong>
-          <span>
-            Matrix và digraph sẽ được tính như visualization từ input sau khi tích hợp; kết quả
-            chính thức luôn lấy từ Backend.
-          </span>
-        </div>
-      </section>
+      <button
+        className="button button--primary"
+        type="button"
+        disabled={!cipher.canSubmit}
+        onClick={cipher.processCipher}
+      >
+        {cipher.isLoading ? "Đang xử lý…" : cipher.mode === "encrypt" ? "Mã hóa" : "Giải mã"}
+      </button>
 
-      <PendingCipherAction
-        algorithmName="Playfair"
-        mode={draft.mode}
-        descriptionId="playfair-backend-status"
-        message="tích hợp API được thực hiện ở giai đoạn tiếp theo sau checkpoint Vigenère."
-      />
-
-      {draft.notice && <Notification notice={draft.notice} onClose={() => draft.setNotice(null)} />}
+      {cipher.notice && (
+        <Notification notice={cipher.notice} onClose={() => cipher.setNotice(null)} />
+      )}
     </div>
   );
 }

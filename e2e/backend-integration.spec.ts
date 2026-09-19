@@ -36,6 +36,46 @@ test("uses the real Vigenère decrypt contract", async ({ page }) => {
   await expect(page.getByText("Attack at dawn!", { exact: true })).toBeVisible();
 });
 
+test("uses the real Playfair text contract", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("tab", { name: /Playfair/ }).click();
+  await page.getByRole("button", { name: "Tạo ví dụ" }).click();
+
+  const requestPromise = page.waitForRequest("**/api/playfair/encrypt");
+  await page.getByRole("button", { name: "Mã hóa" }).click();
+  expect((await requestPromise).postDataJSON()).toEqual({
+    text: "HIDE THE GOLD IN THE TREE STUMP",
+    key: "PLAYFAIR EXAMPLE",
+  });
+  await expect(page.getByText("BMODZBXDNABEKUDMUIXMMOUVIF", { exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: "Phân tích" }).click();
+  await expect(page.getByText("Key Matrix 5×5", { exact: true })).toBeVisible();
+  await expect(page.getByText(/HI → BM/)).toBeVisible();
+});
+
+test("previews and downloads a Playfair file with two server requests", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("tab", { name: /Playfair/ }).click();
+  await page.getByRole("button", { name: "File .txt" }).click();
+  await page.getByLabel("Chọn file văn bản").setInputFiles({
+    name: "secret.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("HIDE THE GOLD IN THE TREE STUMP"),
+  });
+  await page.getByRole("textbox", { name: "Khóa Playfair" }).fill("PLAYFAIR EXAMPLE");
+
+  const previewRequest = page.waitForRequest("**/api/playfair/file");
+  await page.getByRole("button", { name: "Mã hóa" }).click();
+  expect((await previewRequest).method()).toBe("POST");
+  await expect(page.getByText("BMODZBXDNABEKUDMUIXMMOUVIF", { exact: true })).toBeVisible();
+
+  const downloadRequest = page.waitForRequest("**/api/playfair/file");
+  const downloadEvent = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Tải kết quả" }).click();
+  expect((await downloadRequest).method()).toBe("POST");
+  expect((await downloadEvent).suggestedFilename()).toBe("secret.encrypted.txt");
+});
+
 test("previews and downloads a Vigenère file with two requests", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("tab", { name: /Vigenère/ }).click();

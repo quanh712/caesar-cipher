@@ -2,6 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 import { shiftText } from "../features/caesar/utils/caesar";
+import { buildPlayfairMatrix, preparePlayfairDigraphs } from "../features/playfair/utils/analysis";
 
 afterEach(() => {
   cleanup();
@@ -16,7 +17,10 @@ class ResizeObserverMock {
 vi.stubGlobal("ResizeObserver", ResizeObserverMock);
 Object.defineProperty(navigator, "clipboard", {
   configurable: true,
-  value: { writeText: vi.fn().mockResolvedValue(undefined) },
+  value: {
+    readText: vi.fn().mockResolvedValue("Nội dung clipboard"),
+    writeText: vi.fn().mockResolvedValue(undefined),
+  },
 });
 
 function vigenere(text: string, key: string, decrypt: boolean) {
@@ -32,6 +36,34 @@ function vigenere(text: string, key: string, decrypt: boolean) {
       return String.fromCharCode(
         base + ((((code - base + (decrypt ? -shift : shift)) % 26) + 26) % 26),
       );
+    })
+    .join("");
+}
+
+function playfair(text: string, key: string, decrypt: boolean) {
+  const matrix = buildPlayfairMatrix(key);
+  const positions = new Map<string, [number, number]>();
+  matrix.forEach((row, rowIndex) =>
+    row.forEach((letter, columnIndex) => positions.set(letter, [rowIndex, columnIndex])),
+  );
+  return preparePlayfairDigraphs(text, decrypt ? "decrypt" : "encrypt")
+    .map((pair) => {
+      const [firstRow, firstColumn] = positions.get(pair[0])!;
+      const [secondRow, secondColumn] = positions.get(pair[1])!;
+      const direction = decrypt ? -1 : 1;
+      if (firstRow === secondRow) {
+        return (
+          matrix[firstRow][(firstColumn + direction + 5) % 5] +
+          matrix[secondRow][(secondColumn + direction + 5) % 5]
+        );
+      }
+      if (firstColumn === secondColumn) {
+        return (
+          matrix[(firstRow + direction + 5) % 5][firstColumn] +
+          matrix[(secondRow + direction + 5) % 5][secondColumn]
+        );
+      }
+      return matrix[firstRow][secondColumn] + matrix[secondRow][firstColumn];
     })
     .join("");
 }
@@ -56,7 +88,11 @@ async function readFile(file: File) {
 const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
   await new Promise((resolve) => window.setTimeout(resolve, 20));
   const url = String(input);
-  const cipher = url.includes("/vigenere/") ? "vigenere" : "caesar";
+  const cipher = url.includes("/vigenere/")
+    ? "vigenere"
+    : url.includes("/playfair/")
+      ? "playfair"
+      : "caesar";
   const decrypt = url.includes("/decrypt");
 
   if (url.endsWith("/file")) {
@@ -71,7 +107,9 @@ const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => 
     const result =
       cipher === "caesar"
         ? shiftText(source, (action === "decrypt" ? -1 : 1) * Number(BigInt(key) % 26n))
-        : vigenere(source, key, action === "decrypt");
+        : cipher === "vigenere"
+          ? vigenere(source, key, action === "decrypt")
+          : playfair(source, key, action === "decrypt");
     if (responseMode === "file") {
       const suffix = action === "encrypt" ? "encrypted" : "decrypted";
       const filename = `${file.name.replace(/\.txt$/i, "")}.${suffix}.txt`;
@@ -90,7 +128,9 @@ const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => 
   const result =
     cipher === "caesar"
       ? shiftText(body.text, (decrypt ? -1 : 1) * Number(BigInt(body.key) % 26n))
-      : vigenere(body.text, String(body.key), decrypt);
+      : cipher === "vigenere"
+        ? vigenere(body.text, String(body.key), decrypt)
+        : playfair(body.text, String(body.key), decrypt);
   return json({ success: true, result });
 });
 

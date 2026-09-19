@@ -17,8 +17,8 @@ export const cipherAlgorithms = [
     value: "playfair",
     name: "Playfair",
     description: "Mã hóa theo cặp ký tự",
-    status: "Giai đoạn tiếp theo",
-    available: false,
+    status: "Khả dụng",
+    available: true,
   },
 ] as const;
 

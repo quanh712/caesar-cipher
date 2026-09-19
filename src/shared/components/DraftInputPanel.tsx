@@ -16,6 +16,7 @@ interface DraftInputPanelProps {
   onTextChange: (value: string) => void;
   onFileChange: (file: File | null) => void;
   onClear: () => void;
+  onPaste: () => void;
   onCopy: () => void;
 }
 
@@ -59,6 +60,16 @@ export function DraftInputPanel(props: DraftInputPanelProps) {
                 : "Bản mã"}
           </h2>
           <div className="button-group">
+            {props.inputType === "text" && (
+              <button
+                className="button button--secondary"
+                type="button"
+                onClick={props.onPaste}
+                disabled={props.disabled}
+              >
+                Dán
+              </button>
+            )}
             <button
               className="button button--secondary"
               type="button"

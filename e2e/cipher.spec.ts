@@ -5,13 +5,13 @@ test("switches between available ciphers and preserves the Playfair draft", asyn
 
   await page.getByRole("tab", { name: /Playfair/ }).click();
   await expect(page.getByRole("textbox", { name: "Khóa Playfair" })).toBeVisible();
-  await expect(page.getByText("Key Matrix và Digraph")).toBeVisible();
   await expect(page.getByRole("button", { name: "Mã hóa" })).toBeDisabled();
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(
     false,
   );
   await page.getByRole("textbox", { name: "Nội dung đầu vào" }).fill("Playfair draft");
   await page.getByRole("textbox", { name: "Khóa Playfair" }).fill("MONARCHY");
+  await expect(page.getByRole("button", { name: "Mã hóa" })).toBeEnabled();
 
   await page.getByRole("tab", { name: /Vigenère/ }).click();
   await expect(page.getByRole("textbox", { name: "Khóa Vigenère" })).toBeVisible();

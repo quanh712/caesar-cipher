@@ -20,7 +20,7 @@ describe("Cipher Workbench", () => {
     expect(screen.getByRole("textbox", { name: "Nội dung đầu vào" })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Khóa Playfair" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Mã hóa" })).toBeDisabled();
-    expect(screen.getByText(/Chưa thể xử lý Playfair/)).toBeInTheDocument();
+    expect(screen.getByText("Kết quả sẽ hiển thị ở đây sau khi xử lý.")).toBeInTheDocument();
     expect(
       within(screen.getByRole("radiogroup", { name: "Chế độ" })).getByRole("radio", {
         name: /Mã hóa/,
@@ -155,6 +155,23 @@ describe("Cipher Workbench", () => {
     expect(await screen.findByText("Attack at dawn!", { exact: true })).toBeInTheDocument();
   });
 
+  it("analyzes the official Playfair example with matrix and digraph mappings", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: /Playfair/ }));
+    await user.click(screen.getByRole("button", { name: "Tạo ví dụ" }));
+    await user.click(screen.getByRole("button", { name: "Mã hóa" }));
+    expect(
+      await screen.findByText("BMODZBXDNABEKUDMUIXMMOUVIF", { exact: true }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Phân tích" }));
+    expect(screen.getByText("Key Matrix 5×5", { exact: true })).toBeInTheDocument();
+    expect(screen.getByText(/HI → BM/)).toBeInTheDocument();
+    expect(screen.getByText("HIDETHEGOLDINTHETREESTUMP", { exact: true })).toBeInTheDocument();
+  });
+
   it("previews and copies the selected Vigenère file", async () => {
     const user = userEvent.setup();
     const writeText = vi.spyOn(navigator.clipboard, "writeText");
@@ -201,7 +218,7 @@ describe("Cipher Workbench", () => {
     await user.click(screen.getByRole("tab", { name: /Playfair/ }));
     expect(screen.getByRole("textbox", { name: "Nội dung đầu vào" })).toHaveValue("");
     expect(screen.getByRole("textbox", { name: "Khóa Playfair" })).toHaveValue("");
-    expect(screen.getByText("Key Matrix và Digraph")).toBeInTheDocument();
+    expect(screen.getByText("Kết quả sẽ hiển thị ở đây sau khi xử lý.")).toBeInTheDocument();
   });
 
   it("loads the example and encrypts it", async () => {

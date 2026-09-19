@@ -542,6 +542,28 @@ textarea:focus-visible,
 .vigenere-analysis .stats-list {
   min-height: 0;
 }
+.playfair-analysis {
+  min-height: 280px;
+}
+.playfair-analysis .stats-list {
+  min-height: 0;
+}
+.playfair-analysis__details {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.65fr) minmax(0, 1.35fr);
+  border-top: 1px solid var(--border);
+}
+.playfair-analysis__details .key-stream {
+  min-width: 0;
+  padding-top: 14px;
+}
+.playfair-analysis__details .key-stream + .key-stream {
+  border-left: 1px solid var(--border);
+}
+.playfair-matrix {
+  line-height: 1.8 !important;
+  text-align: center;
+}
 .key-stream {
   padding: 4px 16px 16px;
 }
@@ -757,6 +779,13 @@ textarea:focus-visible,
 @media (max-width: 800px) {
   .workspace__columns {
     grid-template-columns: 1fr;
+  }
+  .playfair-analysis__details {
+    grid-template-columns: 1fr;
+  }
+  .playfair-analysis__details .key-stream + .key-stream {
+    border-top: 1px solid var(--border);
+    border-left: 0;
   }
   .mode-selector {
     display: grid;
