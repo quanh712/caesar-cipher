@@ -40,7 +40,7 @@ export function HighlightedTextArea({ value, disabled, onChange }: HighlightedTe
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onScroll={syncScroll}
-        placeholder="Nhập hoặc dán văn bản…"
+        placeholder="Nhập hoặc dán nội dung tại đây…"
         disabled={disabled}
         spellCheck={false}
         aria-label="Nội dung đầu vào"

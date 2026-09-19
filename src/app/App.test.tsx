@@ -249,6 +249,27 @@ describe("Cipher Workbench", () => {
     expect(writeText).toHaveBeenCalledWith("Hello World");
   });
 
+  it("pastes clipboard text before the copy action for every text workspace", async () => {
+    const user = userEvent.setup();
+    const readText = vi.spyOn(navigator.clipboard, "readText").mockResolvedValue("Đã dán");
+    render(<App />);
+
+    for (const algorithm of [/Caesar/, /Vigenère/, /Playfair/]) {
+      await user.click(screen.getByRole("tab", { name: algorithm }));
+      const input = screen.getByRole("textbox", { name: "Nội dung đầu vào" });
+      const inputSection = input.closest("section")!;
+      const paste = within(inputSection).getByRole("button", { name: "Dán" });
+      const copy = within(inputSection).getByRole("button", { name: "Sao chép" });
+
+      expect(paste.compareDocumentPosition(copy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      await user.click(paste);
+      expect(input).toHaveValue("Đã dán");
+      expect(await screen.findByText("Đã dán nội dung từ clipboard.")).toBeInTheDocument();
+    }
+
+    expect(readText).toHaveBeenCalledTimes(3);
+  });
+
   it("decrypts text", async () => {
     const user = userEvent.setup();
     render(<App />);

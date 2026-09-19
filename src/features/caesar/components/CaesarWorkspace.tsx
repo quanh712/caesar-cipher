@@ -30,6 +30,16 @@ export function CaesarWorkspace({ cipher }: CaesarWorkspaceProps) {
     }
   }
 
+  async function pasteInput() {
+    try {
+      const text = await navigator.clipboard.readText();
+      cipher.setText(text);
+      cipher.setNotice({ kind: "success", message: "Đã dán nội dung từ clipboard." });
+    } catch {
+      cipher.setNotice({ kind: "error", message: "Không thể đọc nội dung clipboard." });
+    }
+  }
+
   return (
     <div className="cipher-workspace">
       <CipherModeSelector
@@ -66,6 +76,7 @@ export function CaesarWorkspace({ cipher }: CaesarWorkspaceProps) {
           onTextChange={cipher.setText}
           onFileChange={cipher.setFile}
           onClear={cipher.resetInput}
+          onPaste={pasteInput}
           onCopy={copyInput}
         />
         <OutputPanel

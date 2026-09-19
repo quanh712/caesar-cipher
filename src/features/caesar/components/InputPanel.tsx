@@ -17,6 +17,7 @@ interface InputPanelProps {
   onTextChange: (value: string) => void;
   onFileChange: (file: File | null) => void;
   onClear: () => void;
+  onPaste: () => void;
   onCopy: () => void;
 }
 
@@ -58,6 +59,16 @@ export function InputPanel(props: InputPanelProps) {
                 : "Bản mã"}
           </h2>
           <div className="button-group">
+            {props.inputType === "text" && (
+              <button
+                className="button button--secondary"
+                type="button"
+                onClick={props.onPaste}
+                disabled={props.disabled}
+              >
+                Dán
+              </button>
+            )}
             <button
               className="button button--secondary"
               type="button"
@@ -183,7 +194,7 @@ export function InputPanel(props: InputPanelProps) {
               ? "Chưa chọn file"
               : props.error
                 ? `! ${props.error}`
-                : "✓ Đầu vào hợp lệ."}
+                : "✓ Đầu vào hợp lệ ở mức sơ bộ."}
         </div>
       </div>
     </section>
